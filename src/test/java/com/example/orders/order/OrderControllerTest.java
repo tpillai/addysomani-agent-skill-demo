@@ -16,7 +16,9 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -66,5 +68,36 @@ class OrderControllerTest {
                 .andExpect(status().isBadRequest());
 
         verifyNoInteractions(orderService);
+    }
+
+    @Test
+    void getsOrderById() throws Exception {
+        given(orderService.getOrder(7L)).willReturn(new OrderResponse(
+                7L,
+                Instant.parse("2026-10-04T10:15:30Z"),
+                List.of(new OrderLineResponse(2L, "USB-C hub", new BigDecimal("34.50"), 1, new BigDecimal("34.50"))),
+                new BigDecimal("34.50")));
+
+        mockMvc.perform(get("/api/orders/7"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(7))
+                .andExpect(jsonPath("$.createdAt").value("2026-10-04T10:15:30Z"))
+                .andExpect(jsonPath("$.lines[0].productName").value("USB-C hub"))
+                .andExpect(jsonPath("$.lines[0].lineTotal").value(34.50))
+                .andExpect(jsonPath("$.total").value(34.50));
+    }
+
+    @Test
+    void returns404ProblemDetailForUnknownOrder() throws Exception {
+        given(orderService.getOrder(42L)).willThrow(new OrderNotFoundException(42L));
+
+        mockMvc.perform(get("/api/orders/42"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.title").value("Not Found"))
+                .andExpect(jsonPath("$.detail").value("Order 42 not found"))
+                .andExpect(jsonPath("$.instance").value("/api/orders/42"))
+                .andExpect(jsonPath("$.orderId").value(42));
     }
 }

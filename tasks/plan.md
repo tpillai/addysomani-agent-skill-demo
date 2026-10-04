@@ -54,11 +54,11 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 
 ### Phase 2: Core flow
 - [x] T3: Place an order, happy path: `POST /api/orders` → 201 (M, 5 files)
-- [ ] T4: Read an order: `GET /api/orders/{id}` → 200/404, creates `GlobalExceptionHandler` (M, 6 files incl. 2 edited tests)
+- [x] T4: Read an order: `GET /api/orders/{id}` → 200/404, creates `GlobalExceptionHandler` (M, 6 files incl. 2 edited tests)
 
 ### Checkpoint B: End-to-end
-- [ ] `mvn test` green
-- [ ] Manual: `curl` POST then GET round-trips, and `GET /api/products/1` shows stock decreased
+- [x] `mvn test` green
+- [x] Manual: `curl` POST then GET round-trips, and `GET /api/products/1` shows stock decreased
 - [ ] Human review before the error-path tasks
 
 ### Phase 3: Error paths

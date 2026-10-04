@@ -73,25 +73,25 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 **Files:** `order/PlaceOrderRequest.java`, `order/OrderService.java`, `order/OrderController.java`, `test/.../order/OrderServiceTest.java`, `test/.../order/OrderControllerTest.java`
 **Scope:** M
 
-### - [ ] T4: Read an order: `GET /api/orders/{id}` → 200 / 404 ProblemDetail
+### - [x] T4: Read an order: `GET /api/orders/{id}` → 200 / 404 ProblemDetail
 **Description:** This adds the read path and creates the project's first `@RestControllerAdvice`.
 
 **Acceptance criteria:**
-- [ ] `@Transactional(readOnly = true) OrderService.getOrder(id)` uses `findWithLinesById` and builds the `OrderResponse` inside the transaction. If no order is found, it throws `OrderNotFoundException`.
-- [ ] `web/GlobalExceptionHandler` (`@RestControllerAdvice`, extends `ResponseEntityExceptionHandler`, no constructor dependencies) maps `OrderNotFoundException` to 404 `application/problem+json`, with detail `Order 42 not found` and an `orderId` property
-- [ ] GET 200 returns the same shape as POST, and `ProductControllerTest` stays green
+- [x] `@Transactional(readOnly = true) OrderService.getOrder(id)` uses `findWithLinesById` and builds the `OrderResponse` inside the transaction. If no order is found, it throws `OrderNotFoundException`.
+- [x] `web/GlobalExceptionHandler` (`@RestControllerAdvice`, extends `ResponseEntityExceptionHandler`, no constructor dependencies) maps `OrderNotFoundException` to 404 `application/problem+json`, with detail `Order 42 not found` and an `orderId` property
+- [x] GET 200 returns the same shape as POST, and `ProductControllerTest` stays green
 
 **Verification:**
-- [ ] `mvn test -Dtest=OrderServiceTest,OrderControllerTest,ProductControllerTest`
-- [ ] `mvn test`
+- [x] `mvn test -Dtest=OrderServiceTest,OrderControllerTest,ProductControllerTest`
+- [x] `mvn test`
 
 **Dependencies:** T3
 **Files:** `order/OrderService.java`, `order/OrderController.java`, `order/OrderNotFoundException.java`, `web/GlobalExceptionHandler.java`, plus edits to `OrderServiceTest` and `OrderControllerTest`
 **Scope:** M
 
 ## - [ ] Checkpoint B: End-to-end
-- [ ] `mvn test` green
-- [ ] Manual check. Start the app with `mvn spring-boot:run`, then:
+- [x] `mvn test` green
+- [x] Manual check. Start the app with `mvn spring-boot:run`, then:
   - `curl -i -X POST localhost:8080/api/orders -H 'Content-Type: application/json' -d '{"lines":[{"productId":1,"quantity":2}]}'` returns 201
   - `curl -i localhost:8080/api/orders/1` returns 200 with the same body
   - `curl localhost:8080/api/products/1` shows stock 23

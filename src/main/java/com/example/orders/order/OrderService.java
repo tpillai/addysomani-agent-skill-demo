@@ -37,4 +37,11 @@ public class OrderService {
         }
         return OrderResponse.from(orderRepository.save(order));
     }
+
+    @Transactional(readOnly = true)
+    public OrderResponse getOrder(Long id) {
+        return orderRepository.findWithLinesById(id)
+                .map(OrderResponse::from)
+                .orElseThrow(() -> new OrderNotFoundException(id));
+    }
 }
