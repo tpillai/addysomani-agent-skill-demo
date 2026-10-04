@@ -166,5 +166,5 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 
 ## Review follow-ups (from `/review`)
 - [x] R1: Integration test proves `placeOrder` persists stock, rolls back on failure and never oversells under concurrency (kills the "drop `@Transactional`" mutation)
-- [ ] R2: `createdAt` truncated to microseconds so POST and GET return the same value on every OS
+- [x] R2: `createdAt` truncated to microseconds so POST and GET return the same value on every OS
 - [ ] R3: Catch-all handler returns a 500 ProblemDetail without leaking exception messages

@@ -6,7 +6,9 @@ import com.example.orders.product.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -19,10 +21,12 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final ProductRepository productRepository;
+    private final Clock clock;
 
-    public OrderService(OrderRepository orderRepository, ProductRepository productRepository) {
+    public OrderService(OrderRepository orderRepository, ProductRepository productRepository, Clock clock) {
         this.orderRepository = orderRepository;
         this.productRepository = productRepository;
+        this.clock = clock;
     }
 
     @Transactional
@@ -44,7 +48,8 @@ public class OrderService {
             }
         }
 
-        Order order = new Order(Instant.now());
+        // Truncate to the database's timestamp precision so POST and GET return the same createdAt
+        Order order = new Order(Instant.now(clock).truncatedTo(ChronoUnit.MICROS));
         for (OrderLineRequest line : request.lines()) {
             Product product = products.get(line.productId());
             product.decreaseStock(line.quantity());

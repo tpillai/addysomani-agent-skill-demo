@@ -8,7 +8,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,7 +28,8 @@ class OrderServiceTest {
 
     private final OrderRepository orderRepository = mock(OrderRepository.class);
     private final ProductRepository productRepository = mock(ProductRepository.class);
-    private final OrderService orderService = new OrderService(orderRepository, productRepository);
+    private final Clock clock = Clock.fixed(Instant.parse("2026-10-04T10:15:30.123456789Z"), ZoneOffset.UTC);
+    private final OrderService orderService = new OrderService(orderRepository, productRepository, clock);
 
     @BeforeEach
     void saveReturnsTheOrder() {
@@ -88,6 +91,16 @@ class OrderServiceTest {
                 .isInstanceOf(DuplicateProductException.class)
                 .hasMessage("Product 1 appears on more than one line");
         verifyNoInteractions(productRepository, orderRepository);
+    }
+
+    @Test
+    void placeOrderStampsCreatedAtFromClockTruncatedToMicroseconds() {
+        Product hub = product(2L, "USB-C hub", "34.50", 100);
+        given(productRepository.findAllById(List.of(2L))).willReturn(List.of(hub));
+
+        OrderResponse response = orderService.placeOrder(new PlaceOrderRequest(List.of(new OrderLineRequest(2L, 1))));
+
+        assertThat(response.createdAt()).isEqualTo(Instant.parse("2026-10-04T10:15:30.123456Z"));
     }
 
     @Test
