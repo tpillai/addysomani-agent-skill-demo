@@ -168,3 +168,37 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 - [x] R1: Integration test proves `placeOrder` persists stock, rolls back on failure and never oversells under concurrency (kills the "drop `@Transactional`" mutation)
 - [x] R2: `createdAt` truncated to microseconds so POST and GET return the same value on every OS
 - [x] R3: Catch-all handler returns a 500 ProblemDetail without leaking exception messages
+
+---
+
+## Follow-ups (open, from `/ship` on 2026-10-04)
+The feature was merged to `main` with these open. Each item should be done test-first in its own commit.
+
+### Fix soon (correctness and spec gaps)
+- [ ] F1: Reject fractional `quantity` with 400. Today `{"quantity":1.9}` is truncated to 1 and the order is placed (verified on the running app). Disable float-as-int coercion for `PlaceOrderRequest` only; a global change in `application.yml` needs asking first.
+- [ ] F2: Test that order totals ignore later product price changes. A mutation that computed `lineTotal` from `Product.price` survived every test. Persist an order, bulk-update the product price, reload, and assert `unitPrice`, `lineTotal` and `total` are unchanged.
+- [ ] F3: Malformed JSON 400 should include an `errors` property. SPEC.md lists `errors` for that row; `GlobalExceptionHandler.handleHttpMessageNotReadable` returns none.
+- [ ] F4: Map `ConcurrencyFailureException` (deadlock or lock timeout) to the same 409 as optimistic-lock conflicts. Today these fall through to 500.
+- [ ] F5: Tighten tests:
+  - 50 lines is accepted (a mutation to `@Size(max = 10)` survived)
+  - the concurrency test asserts each 409 `detail`
+  - add a concurrent sell-out case that ends at stock 0
+- [ ] F6: Update the `createdAt` bullet in `tasks/plan.md`. It now comes from an injected `Clock` truncated to microseconds.
+
+### Before any deployment beyond localhost (security)
+- [ ] S1: Move the H2 console into a `dev` profile, disabled by default. It predates this feature, but the console can run arbitrary SQL and code.
+- [ ] S2: Add authentication, a rate limit on `POST /api/orders`, and a per-line `@Max` on quantity. Today one anonymous request can buy all stock.
+- [ ] S3: Cap the request body size before Jackson parses it (proxy limit, or `StreamReadConstraints.maxDocumentLength`).
+- [ ] S4: Bump to the latest Spring Boot 3.5.x patch and add a dependency CVE scan (OWASP dependency-check or OSV) to the build.
+- [ ] S5: When orders get owners, add an owner check on GET and replace guessable sequential ids with a random public id.
+- [ ] S6: Optional:
+  - make `Location` relative instead of built from the request Host
+  - add security headers (`nosniff`, `no-store`)
+
+### Cleanups (optional)
+- [ ] C1: Decide "enough stock?" in one place, e.g. `Product.hasStock(int)`. Today `OrderService` and `Product.decreaseStock` both check.
+- [ ] C2: Isolate the integration test's H2 database (unique URL through `@TestPropertySource`) so future tests can't depend on run order.
+- [ ] C3: Nits:
+  - `ProductNotFoundException` could live in `product/`
+  - `@OrderBy` and `order by l.id` overlap
+  - `ProductTest` doesn't cover negative quantities
