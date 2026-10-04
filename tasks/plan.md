@@ -64,13 +64,13 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 ### Phase 3: Error paths
 - [x] T5: 400 ProblemDetail for invalid requests and duplicate productId (M)
 - [x] T6: 404 unknown product and 409 insufficient stock, all-or-nothing (M)
-- [ ] T7: 409 ProblemDetail for optimistic-lock conflicts (S)
+- [x] T7: 409 ProblemDetail for optimistic-lock conflicts (S)
 
 ### Checkpoint C: Complete
-- [ ] `mvn clean verify` green
-- [ ] Every row in the spec's Errors table is checked by curl
-- [ ] Success criteria 1–8 are all met (see traceability below)
-- [ ] Ready for `/review`
+- [x] `mvn clean verify` green
+- [x] Every row in the spec's Errors table is checked by curl
+- [x] Success criteria 1–8 are all met (see traceability below)
+- [x] Ready for `/review`
 
 ## Traceability: Success Criteria → Tasks
 | # | Criterion | Task(s) |

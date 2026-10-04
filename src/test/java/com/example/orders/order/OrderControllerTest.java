@@ -1,12 +1,14 @@
 package com.example.orders.order;
 
 import com.example.orders.order.OrderResponse.OrderLineResponse;
+import com.example.orders.product.Product;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -173,6 +175,22 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.productId").value(3))
                 .andExpect(jsonPath("$.requested").value(10))
                 .andExpect(jsonPath("$.available").value(8));
+    }
+
+    @Test
+    void returns409ProblemDetailWhenStockChangedConcurrently() throws Exception {
+        given(orderService.placeOrder(any(PlaceOrderRequest.class)))
+                .willThrow(new ObjectOptimisticLockingFailureException(Product.class, 3L));
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"lines":[{"productId":3,"quantity":1}]}"""))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Conflict"))
+                .andExpect(jsonPath("$.detail").value("Stock changed concurrently, please retry"))
+                .andExpect(jsonPath("$.instance").value("/api/orders"));
     }
 
     @Test

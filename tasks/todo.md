@@ -141,23 +141,23 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 **Files:** `order/OrderService.java`, `order/ProductNotFoundException.java`, `order/InsufficientStockException.java`, `web/GlobalExceptionHandler.java`, plus edits to `OrderServiceTest` and `OrderControllerTest`
 **Scope:** M
 
-### - [ ] T7: 409 ProblemDetail for optimistic-lock conflicts
+### - [x] T7: 409 ProblemDetail for optimistic-lock conflicts
 **Description:** When an order loses a concurrent stock update, the client gets a clean 409.
 
 **Acceptance criteria:**
-- [ ] The handler maps `ObjectOptimisticLockingFailureException` to 409 with detail `Stock changed concurrently, please retry`
-- [ ] A `@WebMvcTest` whose mocked `OrderService` throws this exception asserts the 409 ProblemDetail. The exception surfaces at commit through the proxy, so a service unit test can't prove the mapping.
+- [x] The handler maps `ObjectOptimisticLockingFailureException` to 409 with detail `Stock changed concurrently, please retry`
+- [x] A `@WebMvcTest` whose mocked `OrderService` throws this exception asserts the 409 ProblemDetail. The exception surfaces at commit through the proxy, so a service unit test can't prove the mapping.
 
 **Verification:**
-- [ ] `mvn test -Dtest=OrderControllerTest`
-- [ ] `mvn clean verify`
+- [x] `mvn test -Dtest=OrderControllerTest`
+- [x] `mvn clean verify`
 
 **Dependencies:** T4 (T1 proves the exception is raised)
 **Files:** `web/GlobalExceptionHandler.java`, plus an edit to `OrderControllerTest`
 **Scope:** S
 
-## - [ ] Checkpoint C: Complete
-- [ ] `mvn clean verify` green
-- [ ] Manual: every row of the spec's Errors table checked by curl
-- [ ] Success criteria 1–8 are met (see the traceability table in `tasks/plan.md`)
-- [ ] Ready for `/review`
+## - [x] Checkpoint C: Complete
+- [x] `mvn clean verify` green
+- [x] Manual: every row of the spec's Errors table checked by curl
+- [x] Success criteria 1–8 are met (see the traceability table in `tasks/plan.md`)
+- [x] Ready for `/review`

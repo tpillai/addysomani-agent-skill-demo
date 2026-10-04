@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -69,6 +70,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setProperty("requested", ex.getRequested());
         problem.setProperty("available", ex.getAvailable());
         return problem;
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ProblemDetail handleOptimisticLockingFailure(ObjectOptimisticLockingFailureException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, "Stock changed concurrently, please retry");
     }
 
     @ExceptionHandler(OrderNotFoundException.class)
