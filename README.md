@@ -4,6 +4,7 @@
 
 This project shows how [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) make an AI coding assistant (Claude Code) build a Spring Boot feature **properly**: plan first, small steps, tests every time.
 
+📖 **Prefer pictures?** Read the [visual guide](https://claude.ai/artifact/FHhEjrDsyRYR2njszSUmhe), a one-page illustrated walkthrough.
 Want every detail? See the [deep dive](docs/deep-dive.md).
 
 ---
