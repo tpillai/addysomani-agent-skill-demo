@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: orders-service
+  datasource:
+    url: jdbc:h2:mem:orders;DB_CLOSE_DELAY=-1
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    defer-datasource-initialization: true
+    open-in-view: false
+  h2:
+    console:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
