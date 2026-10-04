@@ -63,7 +63,7 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 
 ### Phase 3: Error paths
 - [x] T5: 400 ProblemDetail for invalid requests and duplicate productId (M)
-- [ ] T6: 404 unknown product and 409 insufficient stock, all-or-nothing (M)
+- [x] T6: 404 unknown product and 409 insufficient stock, all-or-nothing (M)
 - [ ] T7: 409 ProblemDetail for optimistic-lock conflicts (S)
 
 ### Checkpoint C: Complete

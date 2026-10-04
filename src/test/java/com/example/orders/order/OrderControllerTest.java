@@ -143,6 +143,39 @@ class OrderControllerTest {
     }
 
     @Test
+    void returns404ProblemDetailForUnknownProduct() throws Exception {
+        given(orderService.placeOrder(any(PlaceOrderRequest.class))).willThrow(new ProductNotFoundException(99L));
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"lines":[{"productId":99,"quantity":1}]}"""))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Product 99 not found"))
+                .andExpect(jsonPath("$.instance").value("/api/orders"))
+                .andExpect(jsonPath("$.productId").value(99));
+    }
+
+    @Test
+    void returns409ProblemDetailForInsufficientStock() throws Exception {
+        given(orderService.placeOrder(any(PlaceOrderRequest.class)))
+                .willThrow(new InsufficientStockException(3L, 10, 8));
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"lines":[{"productId":3,"quantity":10}]}"""))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Conflict"))
+                .andExpect(jsonPath("$.detail").value("Insufficient stock for product 3: requested 10, available 8"))
+                .andExpect(jsonPath("$.productId").value(3))
+                .andExpect(jsonPath("$.requested").value(10))
+                .andExpect(jsonPath("$.available").value(8));
+    }
+
+    @Test
     void getsOrderById() throws Exception {
         given(orderService.getOrder(7L)).willReturn(new OrderResponse(
                 7L,

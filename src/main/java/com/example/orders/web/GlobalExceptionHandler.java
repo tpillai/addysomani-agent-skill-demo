@@ -1,7 +1,9 @@
 package com.example.orders.web;
 
 import com.example.orders.order.DuplicateProductException;
+import com.example.orders.order.InsufficientStockException;
 import com.example.orders.order.OrderNotFoundException;
+import com.example.orders.order.ProductNotFoundException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -50,6 +52,22 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     ProblemDetail handleDuplicateProduct(DuplicateProductException ex) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, ex.getMessage());
         problem.setProperty("productId", ex.getProductId());
+        return problem;
+    }
+
+    @ExceptionHandler(ProductNotFoundException.class)
+    ProblemDetail handleProductNotFound(ProductNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setProperty("productId", ex.getProductId());
+        return problem;
+    }
+
+    @ExceptionHandler(InsufficientStockException.class)
+    ProblemDetail handleInsufficientStock(InsufficientStockException ex) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setProperty("productId", ex.getProductId());
+        problem.setProperty("requested", ex.getRequested());
+        problem.setProperty("available", ex.getAvailable());
         return problem;
     }
 

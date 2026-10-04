@@ -32,6 +32,18 @@ public class OrderService {
         Map<Long, Product> products = productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
 
+        for (OrderLineRequest line : request.lines()) {
+            if (!products.containsKey(line.productId())) {
+                throw new ProductNotFoundException(line.productId());
+            }
+        }
+        for (OrderLineRequest line : request.lines()) {
+            Product product = products.get(line.productId());
+            if (line.quantity() > product.getStock()) {
+                throw new InsufficientStockException(product.getId(), line.quantity(), product.getStock());
+            }
+        }
+
         Order order = new Order(Instant.now());
         for (OrderLineRequest line : request.lines()) {
             Product product = products.get(line.productId());

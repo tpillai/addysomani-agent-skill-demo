@@ -123,19 +123,19 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 **Files:** `web/GlobalExceptionHandler.java`, `order/OrderService.java`, `order/DuplicateProductException.java`, plus edits to `OrderControllerTest` and `OrderServiceTest`
 **Scope:** M
 
-### - [ ] T6: 404 unknown product and 409 insufficient stock, all-or-nothing
+### - [x] T6: 404 unknown product and 409 insufficient stock, all-or-nothing
 **Description:** Catalogue and stock checks run for every line before anything changes.
 
 **Acceptance criteria:**
-- [ ] An unknown `productId` returns 404 with detail `Product 99 not found` and a `productId` property, from `ProductNotFoundException`
-- [ ] A quantity above stock returns 409 with detail `Insufficient stock for product 3: requested 10, available 8` and the properties `productId`, `requested` and `available`, from `InsufficientStockException`. A quantity equal to stock succeeds and leaves stock at 0.
-- [ ] Service tests check that when any line fails:
+- [x] An unknown `productId` returns 404 with detail `Product 99 not found` and a `productId` property, from `ProductNotFoundException`
+- [x] A quantity above stock returns 409 with detail `Insufficient stock for product 3: requested 10, available 8` and the properties `productId`, `requested` and `available`, from `InsufficientStockException`. A quantity equal to stock succeeds and leaves stock at 0.
+- [x] Service tests check that when any line fails:
   - no product's stock changes, including lines before the failing one
   - `orderRepository.save` is never called
 
 **Verification:**
-- [ ] `mvn test -Dtest=OrderServiceTest,OrderControllerTest`
-- [ ] `mvn test`
+- [x] `mvn test -Dtest=OrderServiceTest,OrderControllerTest`
+- [x] `mvn test`
 
 **Dependencies:** T4
 **Files:** `order/OrderService.java`, `order/ProductNotFoundException.java`, `order/InsufficientStockException.java`, `web/GlobalExceptionHandler.java`, plus edits to `OrderServiceTest` and `OrderControllerTest`
