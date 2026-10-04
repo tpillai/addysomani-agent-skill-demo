@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,6 +28,7 @@ public class OrderService {
     @Transactional
     public OrderResponse placeOrder(PlaceOrderRequest request) {
         List<Long> productIds = request.lines().stream().map(OrderLineRequest::productId).toList();
+        rejectDuplicates(productIds);
         Map<Long, Product> products = productRepository.findAllById(productIds).stream()
                 .collect(Collectors.toMap(Product::getId, Function.identity()));
 
@@ -43,5 +46,14 @@ public class OrderService {
         return orderRepository.findWithLinesById(id)
                 .map(OrderResponse::from)
                 .orElseThrow(() -> new OrderNotFoundException(id));
+    }
+
+    private static void rejectDuplicates(List<Long> productIds) {
+        Set<Long> seen = new HashSet<>();
+        for (Long productId : productIds) {
+            if (!seen.add(productId)) {
+                throw new DuplicateProductException(productId);
+            }
+        }
     }
 }

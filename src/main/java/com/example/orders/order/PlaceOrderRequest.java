@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Size;
 
 import java.util.List;
 
-public record PlaceOrderRequest(@NotEmpty @Size(max = 50) @Valid List<OrderLineRequest> lines) {
+public record PlaceOrderRequest(@NotEmpty @Size(max = 50) @Valid List<@NotNull OrderLineRequest> lines) {
 
     public record OrderLineRequest(@NotNull Long productId, @NotNull @Positive Integer quantity) {
     }

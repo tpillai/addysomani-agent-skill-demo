@@ -19,6 +19,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class OrderServiceTest {
 
@@ -73,6 +74,19 @@ class OrderServiceTest {
 
         verify(orderRepository).save(argThat(order ->
                 order.getLines().size() == 1 && order.getLines().get(0).getQuantity() == 3));
+    }
+
+    @Test
+    void placeOrderRejectsDuplicateProductBeforeLoadingAnything() {
+        PlaceOrderRequest request = new PlaceOrderRequest(List.of(
+                new OrderLineRequest(1L, 1),
+                new OrderLineRequest(2L, 1),
+                new OrderLineRequest(1L, 2)));
+
+        assertThatThrownBy(() -> orderService.placeOrder(request))
+                .isInstanceOf(DuplicateProductException.class)
+                .hasMessage("Product 1 appears on more than one line");
+        verifyNoInteractions(productRepository, orderRepository);
     }
 
     @Test

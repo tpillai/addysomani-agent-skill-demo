@@ -2,6 +2,8 @@ package com.example.orders.order;
 
 import com.example.orders.order.OrderResponse.OrderLineResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -11,8 +13,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.endsWith;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -59,15 +64,82 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.total").value(214.48));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "{\"lines\":[]}",
+            "{}",
+            "{\"lines\":[{\"productId\":1,\"quantity\":0}]}",
+            "{\"lines\":[{\"productId\":1,\"quantity\":-1}]}",
+            "{\"lines\":[{\"productId\":1}]}",
+            "{\"lines\":[{\"quantity\":1}]}",
+            "{\"lines\":[null]}"
+    })
+    void rejectsInvalidRequestWith400ProblemDetail(String body) throws Exception {
+        mockMvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Invalid request"))
+                .andExpect(jsonPath("$.instance").value("/api/orders"))
+                .andExpect(jsonPath("$.errors").isNotEmpty());
+
+        verifyNoInteractions(orderService);
+    }
+
     @Test
-    void rejectsInvalidRequestWithoutCallingService() throws Exception {
+    void rejectsMoreThan50Lines() throws Exception {
+        String lines = IntStream.rangeClosed(1, 51)
+                .mapToObj(id -> "{\"productId\":" + id + ",\"quantity\":1}")
+                .collect(Collectors.joining(","));
+
+        mockMvc.perform(post("/api/orders").contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"lines\":[" + lines + "]}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.detail").value("Invalid request"))
+                .andExpect(jsonPath("$.errors[0].field").value("lines"));
+
+        verifyNoInteractions(orderService);
+    }
+
+    @Test
+    void listsFieldErrorsForInvalidLine() throws Exception {
         mockMvc.perform(post("/api/orders")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"lines":[]}"""))
-                .andExpect(status().isBadRequest());
+                                {"lines":[{"productId":null,"quantity":0}]}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.title").value("Bad Request"))
+                .andExpect(jsonPath("$.errors", hasSize(2)))
+                .andExpect(jsonPath("$.errors[0].field").value("lines[0].productId"))
+                .andExpect(jsonPath("$.errors[0].message").value("must not be null"))
+                .andExpect(jsonPath("$.errors[1].field").value("lines[0].quantity"))
+                .andExpect(jsonPath("$.errors[1].message").value("must be greater than 0"));
+    }
+
+    @Test
+    void rejectsMalformedJsonWith400ProblemDetail() throws Exception {
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"lines\": [ oops"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Invalid request"))
+                .andExpect(jsonPath("$.instance").value("/api/orders"));
 
         verifyNoInteractions(orderService);
+    }
+
+    @Test
+    void rejectsDuplicateProductWith400ProblemDetail() throws Exception {
+        given(orderService.placeOrder(any(PlaceOrderRequest.class))).willThrow(new DuplicateProductException(1L));
+
+        mockMvc.perform(post("/api/orders")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"lines":[{"productId":1,"quantity":1},{"productId":1,"quantity":2}]}"""))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.detail").value("Product 1 appears on more than one line"))
+                .andExpect(jsonPath("$.productId").value(1));
     }
 
     @Test

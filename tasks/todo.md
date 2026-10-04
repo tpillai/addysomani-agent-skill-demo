@@ -89,25 +89,25 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 **Files:** `order/OrderService.java`, `order/OrderController.java`, `order/OrderNotFoundException.java`, `web/GlobalExceptionHandler.java`, plus edits to `OrderServiceTest` and `OrderControllerTest`
 **Scope:** M
 
-## - [ ] Checkpoint B: End-to-end
+## - [x] Checkpoint B: End-to-end
 - [x] `mvn test` green
 - [x] Manual check. Start the app with `mvn spring-boot:run`, then:
   - `curl -i -X POST localhost:8080/api/orders -H 'Content-Type: application/json' -d '{"lines":[{"productId":1,"quantity":2}]}'` returns 201
   - `curl -i localhost:8080/api/orders/1` returns 200 with the same body
   - `curl localhost:8080/api/products/1` shows stock 23
-- [ ] Human review before Phase 3
+- [x] Human review before Phase 3
 
 ---
 
 ## Phase 3: Error paths (T5, T6 and T7 each depend only on T4)
 
-### - [ ] T5: 400 ProblemDetail for invalid requests and duplicate productId
+### - [x] T5: 400 ProblemDetail for invalid requests and duplicate productId
 **Description:** Malformed or invalid input gets a consistent 400 ProblemDetail.
 
 **Acceptance criteria:**
-- [ ] The handler overrides `handleMethodArgumentNotValid` and `handleHttpMessageNotReadable` to return 400 with detail `Invalid request`. Bean-validation failures also get an `errors` list of `{field, message}`.
-- [ ] The service throws `DuplicateProductException` when a `productId` repeats. It maps to 400 with detail `Product 1 appears on more than one line` and a `productId` property, and nothing is loaded or changed.
-- [ ] Controller tests cover each of these returning 400:
+- [x] The handler overrides `handleMethodArgumentNotValid` and `handleHttpMessageNotReadable` to return 400 with detail `Invalid request`. Bean-validation failures also get an `errors` list of `{field, message}`.
+- [x] The service throws `DuplicateProductException` when a `productId` repeats. It maps to 400 with detail `Product 1 appears on more than one line` and a `productId` property, and nothing is loaded or changed.
+- [x] Controller tests cover each of these returning 400:
   - empty `lines`
   - 51 lines
   - quantity 0
@@ -116,8 +116,8 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
   - a duplicate `productId`
 
 **Verification:**
-- [ ] `mvn test -Dtest=OrderControllerTest,OrderServiceTest`
-- [ ] `mvn test`
+- [x] `mvn test -Dtest=OrderControllerTest,OrderServiceTest`
+- [x] `mvn test`
 
 **Dependencies:** T4
 **Files:** `web/GlobalExceptionHandler.java`, `order/OrderService.java`, `order/DuplicateProductException.java`, plus edits to `OrderControllerTest` and `OrderServiceTest`

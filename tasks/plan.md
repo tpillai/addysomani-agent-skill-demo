@@ -59,10 +59,10 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 ### Checkpoint B: End-to-end
 - [x] `mvn test` green
 - [x] Manual: `curl` POST then GET round-trips, and `GET /api/products/1` shows stock decreased
-- [ ] Human review before the error-path tasks
+- [x] Human review before the error-path tasks
 
 ### Phase 3: Error paths
-- [ ] T5: 400 ProblemDetail for invalid requests and duplicate productId (M)
+- [x] T5: 400 ProblemDetail for invalid requests and duplicate productId (M)
 - [ ] T6: 404 unknown product and 409 insufficient stock, all-or-nothing (M)
 - [ ] T7: 409 ProblemDetail for optimistic-lock conflicts (S)
 
