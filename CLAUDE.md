@@ -16,6 +16,7 @@ addyosmani/agent-skills workflow (/spec → /plan → /build → /test → /revi
 - Run app: `mvn spring-boot:run`  → http://localhost:8080
   - Health: http://localhost:8080/actuator/health (only `health` and `info` are exposed)
   - H2 console: http://localhost:8080/h2-console (JDBC URL `jdbc:h2:mem:orders`)
+- Smoke test against a running app: `scripts/smoke-test.sh [base-url]` (default http://localhost:8080). It places real orders and drains product 3, so restart the app first.
 - No linter or formatter is configured.
 
 ## Layout
