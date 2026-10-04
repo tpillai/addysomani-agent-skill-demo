@@ -27,27 +27,27 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 **Files:** `product/Product.java`, `resources/data.sql`, `test/.../product/ProductTest.java`, `test/.../product/ProductOptimisticLockTest.java`
 **Scope:** S
 
-### - [ ] T2: Order persistence: entities, fetch-join repository, `OrderResponse`
+### - [x] T2: Order persistence: entities, fetch-join repository, `OrderResponse`
 **Description:** This adds the `Order`/`OrderLine` model and a single-query load of an order with its lines and products. It also adds the response records that map it.
 
 **Acceptance criteria:**
-- [ ] The two entities map as follows:
+- [x] The two entities map as follows:
   - `Order` is `@Table(name = "orders")` with `id` and `createdAt` (set in the constructor), and `@OneToMany(mappedBy, cascade = ALL)` LAZY lines
   - `OrderLine` has `@ManyToOne(LAZY) Product`, `quantity` and `BigDecimal unitPrice`
-- [ ] `OrderRepository.findWithLinesById(Long)` uses `left join fetch o.lines l join fetch l.product`. The `@DataJpaTest` shows the lines and products are initialised (`Hibernate.isInitialized`). If `Order` clashes as an HQL keyword, use `@Entity(name = "CustomerOrder")`.
-- [ ] `OrderResponse.from(Order)` / `OrderLineResponse.from(OrderLine)` compute `lineTotal = unitPrice × quantity` and `total = Σ lineTotal` (asserted with `isEqualByComparingTo`)
+- [x] `OrderRepository.findWithLinesById(Long)` uses `left join fetch o.lines l join fetch l.product`. The `@DataJpaTest` shows the lines and products are initialised (`Hibernate.isInitialized`). If `Order` clashes as an HQL keyword, use `@Entity(name = "CustomerOrder")`.
+- [x] `OrderResponse.from(Order)` / `OrderLineResponse.from(OrderLine)` compute `lineTotal = unitPrice × quantity` and `total = Σ lineTotal` (asserted with `isEqualByComparingTo`)
 
 **Verification:**
-- [ ] `mvn test -Dtest=OrderRepositoryTest`
-- [ ] `mvn test`
+- [x] `mvn test -Dtest=OrderRepositoryTest`
+- [x] `mvn test`
 
 **Dependencies:** T1
 **Files:** `order/Order.java`, `order/OrderLine.java`, `order/OrderRepository.java`, `order/OrderResponse.java` (includes the nested `OrderLineResponse`), `test/.../order/OrderRepositoryTest.java`
 **Scope:** M
 
-## - [ ] Checkpoint A: Foundation
-- [ ] `mvn test` green
-- [ ] `mvn spring-boot:run` starts, and `curl localhost:8080/api/products` is unchanged
+## - [x] Checkpoint A: Foundation
+- [x] `mvn test` green
+- [x] `mvn spring-boot:run` starts, and `curl localhost:8080/api/products` is unchanged
 
 ---
 

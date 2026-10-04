@@ -46,11 +46,11 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 
 ### Phase 1: Foundation
 - [x] T1: Product gets `@Version` + `decreaseStock`, with optimistic-lock proof (S)
-- [ ] T2: Order persistence: entities, fetch-join repository, `OrderResponse` (M, 5 files)
+- [x] T2: Order persistence: entities, fetch-join repository, `OrderResponse` (M, 5 files)
 
 ### Checkpoint A: Foundation
-- [ ] `mvn test` green (includes the context-load test, which runs `data.sql` against the new schema)
-- [ ] `mvn spring-boot:run` starts, and `GET /api/products` is unchanged
+- [x] `mvn test` green (includes the context-load test, which runs `data.sql` against the new schema)
+- [x] `mvn spring-boot:run` starts, and `GET /api/products` is unchanged
 
 ### Phase 2: Core flow
 - [ ] T3: Place an order, happy path: `POST /api/orders` → 201 (M, 5 files)
