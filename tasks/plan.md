@@ -53,7 +53,7 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 - [x] `mvn spring-boot:run` starts, and `GET /api/products` is unchanged
 
 ### Phase 2: Core flow
-- [ ] T3: Place an order, happy path: `POST /api/orders` → 201 (M, 5 files)
+- [x] T3: Place an order, happy path: `POST /api/orders` → 201 (M, 5 files)
 - [ ] T4: Read an order: `GET /api/orders/{id}` → 200/404, creates `GlobalExceptionHandler` (M, 6 files incl. 2 edited tests)
 
 ### Checkpoint B: End-to-end

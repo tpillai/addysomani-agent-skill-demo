@@ -53,21 +53,21 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 
 ## Phase 2: Core flow
 
-### - [ ] T3: Place an order, happy path: `POST /api/orders` → 201
+### - [x] T3: Place an order, happy path: `POST /api/orders` → 201
 **Description:** This is the first end-to-end slice. A valid request creates an order, snapshots prices, decrements stock and returns 201.
 
 **Acceptance criteria:**
-- [ ] `PlaceOrderRequest(lines)` carries `@NotEmpty @Size(max = 50) @Valid`, and the nested `OrderLineRequest(productId, quantity)` carries `@NotNull` / `@NotNull @Positive`
-- [ ] `@Transactional OrderService.placeOrder` does the following and returns an `OrderResponse`:
+- [x] `PlaceOrderRequest(lines)` carries `@NotEmpty @Size(max = 50) @Valid`, and the nested `OrderLineRequest(productId, quantity)` carries `@NotNull` / `@NotNull @Positive`
+- [x] `@Transactional OrderService.placeOrder` does the following and returns an `OrderResponse`:
   - loads the products with `findAllById`
   - sets `unitPrice` from `product.getPrice()`
   - calls `decreaseStock` for each line
   - saves the order
-- [ ] `OrderController` POST takes `@Valid` input and returns 201, a `Location` header that ends with `/api/orders/{id}`, and the body from the spec
+- [x] `OrderController` POST takes `@Valid` input and returns 201, a `Location` header that ends with `/api/orders/{id}`, and the body from the spec
 
 **Verification:**
-- [ ] `mvn test -Dtest=OrderServiceTest,OrderControllerTest`. These are a plain unit test with mocked repositories (checks the stock decrement, price snapshot and total) and a `@WebMvcTest` with `@MockitoBean OrderService`.
-- [ ] `mvn test`
+- [x] `mvn test -Dtest=OrderServiceTest,OrderControllerTest`. These are a plain unit test with mocked repositories (checks the stock decrement, price snapshot and total) and a `@WebMvcTest` with `@MockitoBean OrderService`.
+- [x] `mvn test`
 
 **Dependencies:** T2
 **Files:** `order/PlaceOrderRequest.java`, `order/OrderService.java`, `order/OrderController.java`, `test/.../order/OrderServiceTest.java`, `test/.../order/OrderControllerTest.java`
