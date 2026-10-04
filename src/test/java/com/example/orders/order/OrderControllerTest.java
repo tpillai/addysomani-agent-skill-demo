@@ -20,6 +20,8 @@ import java.util.stream.IntStream;
 
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -191,6 +193,28 @@ class OrderControllerTest {
                 .andExpect(jsonPath("$.title").value("Conflict"))
                 .andExpect(jsonPath("$.detail").value("Stock changed concurrently, please retry"))
                 .andExpect(jsonPath("$.instance").value("/api/orders"));
+    }
+
+    @Test
+    void returns500ProblemDetailWithoutLeakingUnexpectedErrors() throws Exception {
+        given(orderService.getOrder(7L)).willThrow(new IllegalStateException("connection to jdbc:h2:secret failed"));
+
+        mockMvc.perform(get("/api/orders/7"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON))
+                .andExpect(jsonPath("$.title").value("Internal Server Error"))
+                .andExpect(jsonPath("$.detail").value("Unexpected error"))
+                .andExpect(jsonPath("$.instance").value("/api/orders/7"))
+                .andExpect(content().string(not(containsString("secret"))));
+    }
+
+    @Test
+    void frameworkErrorsKeepTheirOwnStatus() throws Exception {
+        mockMvc.perform(get("/api/orders/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_PROBLEM_JSON));
+
+        verifyNoInteractions(orderService);
     }
 
     @Test

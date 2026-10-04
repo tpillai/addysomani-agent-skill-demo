@@ -83,4 +83,10 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         problem.setProperty("orderId", ex.getOrderId());
         return problem;
     }
+
+    @ExceptionHandler(Exception.class)
+    ProblemDetail handleUnexpected(Exception ex) {
+        logger.error("Unhandled exception", ex);
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, "Unexpected error");
+    }
 }
