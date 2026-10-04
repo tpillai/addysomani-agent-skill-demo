@@ -7,21 +7,21 @@ Every task ends with `mvn test` passing, and the existing `ProductControllerTest
 
 ## Phase 1: Foundation
 
-### - [ ] T1: Product gets `@Version` + `decreaseStock`, with optimistic-lock proof
+### - [x] T1: Product gets `@Version` + `decreaseStock`, with optimistic-lock proof
 **Description:** This adds optimistic locking to `Product` and a guarded way to change stock. It is the riskiest piece, so it goes first.
 
 **Acceptance criteria:**
-- [ ] `Product` has `@Version private long version` (primitive, non-null), and every `data.sql` insert sets `version` = 0
-- [ ] `decreaseStock(int quantity)` subtracts the quantity, allows reaching 0, and throws `IllegalArgumentException` if the quantity is ≤ 0 or more than the stock. No public stock setter is added.
-- [ ] A `@DataJpaTest` does the following and asserts `ObjectOptimisticLockingFailureException`:
+- [x] `Product` has `@Version private long version` (primitive, non-null), and every `data.sql` insert sets `version` = 0
+- [x] `decreaseStock(int quantity)` subtracts the quantity, allows reaching 0, and throws `IllegalArgumentException` if the quantity is ≤ 0 or more than the stock. No public stock setter is added.
+- [x] A `@DataJpaTest` does the following and asserts `ObjectOptimisticLockingFailureException`:
   - persists its own product
   - detaches a copy
   - bumps the version through a managed instance and flushes
   - calls `decreaseStock` on the stale copy and `saveAndFlush`es it
 
 **Verification:**
-- [ ] `mvn test -Dtest=ProductTest,ProductOptimisticLockTest`
-- [ ] `mvn test` (the context-load test proves `data.sql` matches the schema)
+- [x] `mvn test -Dtest=ProductTest,ProductOptimisticLockTest`
+- [x] `mvn test` (the context-load test proves `data.sql` matches the schema)
 
 **Dependencies:** None
 **Files:** `product/Product.java`, `resources/data.sql`, `test/.../product/ProductTest.java`, `test/.../product/ProductOptimisticLockTest.java`

@@ -45,7 +45,7 @@ T5, T6 and T7 each depend only on T4, so they can be built in any order or in pa
 ## Task List
 
 ### Phase 1: Foundation
-- [ ] T1: Product gets `@Version` + `decreaseStock`, with optimistic-lock proof (S)
+- [x] T1: Product gets `@Version` + `decreaseStock`, with optimistic-lock proof (S)
 - [ ] T2: Order persistence: entities, fetch-join repository, `OrderResponse` (M, 5 files)
 
 ### Checkpoint A: Foundation
