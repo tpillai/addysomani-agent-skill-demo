@@ -7,6 +7,8 @@ This project shows how [Addy Osmani's agent-skills](https://github.com/addyosman
 📖 **Prefer pictures?** Read the [visual guide (PDF)](docs/visual-guide.pdf), an 8-page illustrated walkthrough you can view, download or print.
 Want every detail? See the [deep dive](docs/deep-dive.md).
 
+🧭 **New to the codebase?** [Orders Service Evolution](Orders%20Service%20Evolution.html) walks through the history commit by commit. For each commit it shows an architecture diagram that marks what was added and what changed, plus how `POST /api/orders` and the error responses grew along the way. GitHub shows the source of HTML files, so [open it in your browser through htmlpreview](https://htmlpreview.github.io/?https://github.com/tpillai/addysomani-agent-skill-demo/blob/main/Orders%20Service%20Evolution.html), or clone the repo and open the file locally.
+
 ---
 
 ## The idea in one picture

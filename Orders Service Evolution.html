@@ -1,0 +1,526 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Orders Service Evolution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: phase strip on top, then a two-column workbench — git rail on the left, the selected commit's architecture on the right. */
+:root {
+  --bg: #eef1f0; --surface: #ffffff; --ink: #17201f; --muted: #5b6966; --line: #c9d2cf;
+  --accent: #0f6b5c; --accent-soft: #d5ebe5; --change: #a65c06; --change-soft: #f7e7d0;
+  --ghost: #aab5b2; --branch: #3d5fa8; --branch-soft: #dde5f5;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111716; --surface: #18201f; --ink: #e3ebe8; --muted: #93a39f; --line: #2d3836;
+  --accent: #4fc2a8; --accent-soft: #163a33; --change: #e6a24a; --change-soft: #3a2b16;
+  --ghost: #4a5654; --branch: #8ea6e6; --branch-soft: #1f2a42; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111716; --surface: #18201f; --ink: #e3ebe8; --muted: #93a39f; --line: #2d3836;
+  --accent: #4fc2a8; --accent-soft: #163a33; --change: #e6a24a; --change-soft: #3a2b16;
+  --ghost: #4a5654; --branch: #8ea6e6; --branch-soft: #1f2a42; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font: 15px/1.55 var(--f-body); }
+.wrap { max-width: 1240px; margin: 0 auto; padding: 32px 20px 64px; display: grid; gap: 28px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 4vw, 40px); font-weight: 800; letter-spacing: -0.02em; }
+h2 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.01em; }
+p { margin: 0; }
+code, .mono { font-family: var(--f-mono); font-size: 0.86em; }
+.lede { max-width: 68ch; color: var(--muted); }
+header { display: grid; gap: 10px; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+
+/* Phase strip */
+.phases { display: flex; flex-wrap: wrap; gap: 6px; align-items: stretch; }
+.phase { flex: 1 1 120px; min-width: 0; display: grid; gap: 4px; align-content: start; text-align: left;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px;
+  font: inherit; color: inherit; cursor: pointer; position: relative; }
+.phase:hover { border-color: var(--accent); }
+.phase[aria-current="true"] { border-color: var(--accent); box-shadow: inset 0 -3px 0 var(--accent); }
+.phase .pn { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.phase .pt { font-family: var(--f-display); font-weight: 700; font-size: 15px; }
+.phase .pd { font-size: 12px; color: var(--muted); line-height: 1.4; }
+.phase .pc { font-family: var(--f-mono); font-size: 11px; color: var(--accent); }
+.arrow { align-self: center; color: var(--ghost); font-family: var(--f-mono); }
+
+/* Workbench */
+.bench { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 20px; align-items: start; }
+@media (max-width: 900px) { .bench { grid-template-columns: minmax(0, 1fr); } .rail { max-height: 320px; } }
+.rail { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 8px 12px 0;
+  position: sticky; top: calc(env(safe-area-inset-top, 0px) + 12px); max-height: calc(100vh - 24px); overflow-y: auto; }
+.rail-head { display: flex; gap: 14px; padding: 0 12px 10px 16px; font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.rail-head span::before { content: ""; display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: 0; }
+.rail-head .k-main::before { background: var(--accent); }
+.rail-head .k-feat::before { background: var(--branch); }
+.commit { display: grid; grid-template-columns: 44px minmax(0, 1fr); align-items: stretch; width: 100%;
+  background: none; border: 0; padding: 0; text-align: left; font: inherit; color: inherit; cursor: pointer; }
+.commit .lane { position: relative; }
+.commit .lane svg { position: absolute; inset: 0; width: 44px; height: 100%; overflow: visible; }
+.commit .ct { padding: 7px 10px 7px 4px; border-radius: 5px; min-width: 0; }
+.commit:hover .ct { background: var(--bg); }
+.commit[aria-current="true"] .ct { background: var(--accent-soft); }
+.commit:focus-visible { outline: none; }
+.commit:focus-visible .ct { outline: 2px solid var(--accent); outline-offset: -2px; }
+.ct .h { font-family: var(--f-mono); font-size: 11px; color: var(--muted); }
+.ct .s { font-size: 13px; line-height: 1.35; overflow-wrap: anywhere; }
+
+.detail { display: grid; gap: 18px; min-width: 0; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 18px 20px; min-width: 0; display: grid; gap: 12px; }
+.dhead { display: grid; gap: 8px; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-family: var(--f-mono); font-size: 11px; padding: 2px 8px; border-radius: 99px; border: 1px solid var(--line); color: var(--muted); }
+.tag.main { color: var(--accent); border-color: var(--accent); }
+.tag.feat { color: var(--branch); border-color: var(--branch); }
+.nav { display: flex; gap: 8px; align-items: center; }
+.nav button { font: 500 13px var(--f-body); color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 6px 12px; cursor: pointer; }
+.nav button:hover:not(:disabled) { border-color: var(--accent); }
+.nav button:disabled { opacity: 0.4; cursor: default; }
+.nav button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.nav .pos { font-family: var(--f-mono); font-size: 12px; color: var(--muted); margin-left: auto; }
+.why { border-left: 3px solid var(--accent); padding-left: 12px; color: var(--ink); }
+.why b { font-weight: 600; }
+
+.diagram { overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 720px; height: auto; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; border: 1.5px solid; }
+.lg-new { background: var(--accent-soft); border-color: var(--accent) !important; }
+.lg-mod { background: var(--change-soft); border-color: var(--change) !important; }
+.lg-same { background: var(--surface); border-color: var(--line) !important; }
+.lg-ghost { background: transparent; border-color: var(--ghost) !important; border-style: dashed !important; }
+
+.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; }
+@media (max-width: 700px) { .grid2 { grid-template-columns: minmax(0, 1fr); } }
+ol.flow { margin: 0; padding: 0; list-style: none; display: grid; gap: 2px; counter-reset: step; }
+ol.flow li { counter-increment: step; display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 8px; padding: 5px 8px; border-radius: 4px; font-size: 13.5px; }
+ol.flow li::before { content: counter(step); font-family: var(--f-mono); font-size: 11px; color: var(--muted); padding-top: 2px; }
+ol.flow li.new { background: var(--accent-soft); }
+ol.flow li.new::after { content: none; }
+.newmark { font-family: var(--f-mono); font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin-left: 6px; }
+.empty { color: var(--muted); font-size: 13.5px; font-style: italic; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { text-align: left; font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); padding: 4px 6px; border-bottom: 1px solid var(--line); }
+td { padding: 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+tr.new td { background: var(--accent-soft); }
+td.code { font-family: var(--f-mono); font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; }
+.tablewrap { overflow-x: auto; }
+ul.files { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-family: var(--f-mono); font-size: 12px; }
+ul.files li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; overflow-wrap: anywhere; }
+ul.files .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-family: var(--f-mono); font-size: 11.5px; padding: 3px 8px; border-radius: 4px; background: var(--bg); border: 1px solid var(--line); }
+.chip.new { background: var(--accent-soft); border-color: var(--accent); }
+.sub { display: grid; gap: 8px; }
+.sub h2 { font-size: 11px; }
+footer { color: var(--muted); font-size: 12.5px; max-width: 80ch; }
+@media (prefers-reduced-motion: no-preference) { .node, .edge { transition: opacity .25s ease; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Orders Service Evolution</h1>
+    <p class="lede">How <code>orders-service</code> grew from a read-only product catalogue into an order API with all-or-nothing stock updates, one commit at a time. Pick a phase or a commit, or use the ← → keys. The diagram shows what existed at that commit, what was added, and what changed.</p>
+    <div class="meta"><span>19 commits on main</span><span>branch feature/orders, merged at d80f6b4</span><span>Spring Boot · Java 21 · H2</span><span>4 Oct 2026</span></div>
+  </header>
+
+  <section style="display:grid;gap:10px">
+    <h2>The path, phase by phase</h2>
+    <div class="phases" id="phases"></div>
+  </section>
+
+  <div class="bench">
+    <nav class="rail" aria-label="Commits">
+      <div class="rail-head"><span class="k-main">main</span><span class="k-feat">feature/orders</span></div>
+      <div id="rail"></div>
+    </nav>
+
+    <main class="detail">
+      <section class="card">
+        <div class="dhead">
+          <div class="tags" id="d-tags"></div>
+          <h3 id="d-title"></h3>
+          <p id="d-summary"></p>
+          <p class="why" id="d-why"></p>
+        </div>
+        <div class="nav">
+          <button id="prev" type="button">← Previous</button>
+          <button id="next" type="button">Next →</button>
+          <span class="pos" id="pos"></span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Architecture at this commit</h2>
+        <div class="diagram" id="diagram"></div>
+        <div class="legend">
+          <span><i class="lg-new"></i>Added in this commit</span>
+          <span><i class="lg-mod"></i>Changed in this commit</span>
+          <span><i class="lg-same"></i>Already there</span>
+          <span><i class="lg-ghost"></i>Not built yet</span>
+        </div>
+      </section>
+
+      <div class="grid2">
+        <section class="card">
+          <h2>What <code>POST /api/orders</code> does</h2>
+          <div id="flow"></div>
+        </section>
+        <section class="card">
+          <h2>Error responses</h2>
+          <div id="errors"></div>
+        </section>
+      </div>
+
+      <div class="grid2">
+        <section class="card">
+          <h2>Files changed</h2>
+          <ul class="files" id="files"></ul>
+        </section>
+        <section class="card" style="gap:16px">
+          <div class="sub"><h2>Endpoints</h2><div class="chips" id="endpoints"></div></div>
+          <div class="sub"><h2>Test classes</h2><div class="chips" id="tests"></div></div>
+          <div class="sub"><h2>Docs and process files</h2><div class="chips" id="docs"></div></div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <footer>Built from <code>git log</code> of <code>orders-service</code> (main, 19 commits). Line counts are insertions/deletions per file. The SPEC → plan → task-by-task flow follows the agent-skills workflow (<code>/spec</code>, <code>/plan</code>, <code>/build</code>, <code>/ship</code>).</footer>
+</div>
+
+<script>
+const PHASES = [
+  { id: 'scaffold', t: 'Scaffold', d: 'Product catalogue on H2', range: [0, 0] },
+  { id: 'spec', t: 'Specify', d: 'SPEC.md for orders', range: [1, 1] },
+  { id: 'plan', t: 'Plan', d: 'Tasks T1–T7', range: [2, 2] },
+  { id: 'build', t: 'Build', d: 'One task per commit', range: [3, 9] },
+  { id: 'harden', t: 'Harden', d: 'Fixes from review', range: [10, 13] },
+  { id: 'merge', t: 'Merge', d: 'feature → main', range: [14, 14] },
+  { id: 'docs', t: 'Document', d: 'README, guides', range: [15, 18] },
+];
+
+const C = [
+  { h: 'ed4e089', s: '1-initial-code', lane: 'main',
+    sum: 'The starting point: a Spring Boot app with a read-only product catalogue. Three products are seeded into an in-memory H2 database at startup, and there are no orders yet.',
+    why: '<b>Read first.</b> This commit sets the conventions every later commit follows: package-by-feature (<code>product/</code>), records for API responses, constructor injection, and <code>open-in-view: false</code>.',
+    add: ['client', 'productController', 'productRepo', 'h2'], mod: [],
+    files: [['.gitignore', '+5'], ['CLAUDE.md', '+29'], ['TRY-IT.md', '+62'], ['pom.xml', '+61'], ['OrdersApplication.java', '+12'], ['product/Product.java', '+47'], ['product/ProductController.java', '+33'], ['product/ProductRepository.java', '+6'], ['product/ProductResponse.java', '+10'], ['application.yml', '+19'], ['data.sql', '+3'], ['OrdersApplicationTests.java', '+12'], ['ProductControllerTest.java', '+45']] },
+  { h: 'ec0b4ae', s: '2-spec-order', lane: 'main',
+    sum: 'No code changes. SPEC.md describes the orders feature before anything is built: the two endpoints, request and response shapes, error codes, and the decisions that were confirmed.',
+    why: '<b>Key decisions recorded here:</b> optimistic locking with <code>@Version</code> on Product (the losing order gets 409), a repeated productId is a 400, and each line stores the price at order time.',
+    add: [], mod: [],
+    files: [['SPEC.md', '+221'], ['CLAUDE.md', '+20 −4']] },
+  { h: 'd4404b0', s: '3-plan step', lane: 'feat',
+    sum: 'The feature/orders branch starts. The spec is split into seven small tasks (T1–T7) in tasks/plan.md, with a checklist in tasks/todo.md. Each task has acceptance criteria and becomes one commit.',
+    why: '<b>How to read the rest of the history:</b> commits T1–T7 below match the tasks in <code>tasks/plan.md</code> one to one.',
+    add: [], mod: [],
+    files: [['tasks/plan.md', '+99'], ['tasks/todo.md', '+163']] },
+  { h: '891c7bd', s: 'T1: add optimistic locking and decreaseStock to Product', lane: 'feat',
+    sum: 'Product gets a @Version field, so two transactions that change the same product cannot both win. Product also gets decreaseStock(qty), which rejects zero, negative, and over-stock quantities.',
+    why: '<b>Foundation for concurrency safety.</b> A DataJpaTest proves that saving a stale Product throws <code>ObjectOptimisticLockingFailureException</code>. T7 later turns that into a 409.',
+    add: [], mod: ['productRepo', 'h2'],
+    files: [['product/Product.java', '+18'], ['data.sql', '+3 −3'], ['ProductOptimisticLockTest.java', '+48'], ['ProductTest.java', '+47'], ['tasks/plan.md', '+1 −1'], ['tasks/todo.md', '+6 −6']] },
+  { h: '97cafc2', s: 'T2: add Order/OrderLine persistence and OrderResponse', lane: 'feat',
+    sum: 'The order data model. Order (table orders) owns its OrderLines and saves them with cascade. Each OrderLine keeps a copy of the unit price. OrderRepository.findWithLinesById loads an order, its lines, and their products in one query.',
+    why: '<b>Totals are computed, not stored.</b> OrderResponse calculates lineTotal and total with BigDecimal from the saved unit prices, so later price changes never affect old orders.',
+    add: ['orderRepo'], mod: ['h2'],
+    files: [['order/Order.java', '+56'], ['order/OrderLine.java', '+61'], ['order/OrderRepository.java', '+18'], ['order/OrderResponse.java', '+24'], ['OrderRepositoryTest.java', '+72'], ['tasks/plan.md', '+3 −3'], ['tasks/todo.md', '+9 −9']] },
+  { h: 'dafc960', s: 'T3: place an order via POST /api/orders', lane: 'feat',
+    sum: 'The first working order endpoint. OrderController accepts a validated PlaceOrderRequest. OrderService.placeOrder runs in one transaction: it loads the products, reduces stock, copies the prices into the lines, and saves the order.',
+    why: '<b>The main request path exists from here on.</b> The response is 201 Created with a Location header pointing to the new order.',
+    add: ['orderController', 'orderService'], mod: [],
+    files: [['order/OrderController.java', '+32'], ['order/OrderService.java', '+40'], ['order/PlaceOrderRequest.java', '+15'], ['OrderControllerTest.java', '+70'], ['OrderServiceTest.java', '+80'], ['tasks/plan.md', '+1 −1'], ['tasks/todo.md', '+6 −6']] },
+  { h: '40bee57', s: 'T4: read an order via GET /api/orders/{id}', lane: 'feat',
+    sum: 'GET /api/orders/{id} reads an order back with the fetch-join query inside a read-only transaction. GlobalExceptionHandler is introduced and maps an unknown order id to a 404 ProblemDetail.',
+    why: '<b>All errors go through one place from now on.</b> GlobalExceptionHandler extends ResponseEntityExceptionHandler, and every later error code is added there.',
+    add: ['handler'], mod: ['orderController', 'orderService'],
+    files: [['order/OrderController.java', '+7'], ['order/OrderNotFoundException.java', '+15'], ['order/OrderService.java', '+7'], ['web/GlobalExceptionHandler.java', '+19'], ['OrderControllerTest.java', '+33'], ['OrderServiceTest.java', '+26'], ['tasks/plan.md', '+3 −3'], ['tasks/todo.md', '+8 −8']] },
+  { h: '3457628', s: 'T5: 400 ProblemDetail for invalid requests and duplicate productId', lane: 'feat',
+    sum: 'Bad input now returns a 400 ProblemDetail. Validation errors come back as a sorted list of {field, message}, and malformed JSON gets the same "Invalid request" detail. The service rejects an order that lists the same productId twice, before it loads any product.',
+    why: '<b>Pattern to copy:</b> a domain exception (DuplicateProductException) thrown in the service plus one handler method in GlobalExceptionHandler.',
+    add: [], mod: ['orderService', 'handler'],
+    files: [['order/DuplicateProductException.java', '+15'], ['order/OrderService.java', '+12'], ['order/PlaceOrderRequest.java', '+1 −1'], ['web/GlobalExceptionHandler.java', '+43'], ['OrderControllerTest.java', '+75 −3'], ['OrderServiceTest.java', '+14'], ['tasks/plan.md', '+2 −2'], ['tasks/todo.md', '+8 −8']] },
+  { h: 'db64bc0', s: 'T6: 404 for unknown products, 409 for insufficient stock', lane: 'feat',
+    sum: 'The service now checks every line before changing anything. First it confirms all products exist (404 if not), then that each line fits in stock (409 with requested and available). Stock is reduced only after every check passes.',
+    why: '<b>This is what makes placement all-or-nothing:</b> all checks run before any write, so a rejected order leaves stock untouched.',
+    add: [], mod: ['orderService', 'handler'],
+    files: [['order/InsufficientStockException.java', '+27'], ['order/OrderService.java', '+12'], ['order/ProductNotFoundException.java', '+15'], ['web/GlobalExceptionHandler.java', '+18'], ['OrderControllerTest.java', '+33'], ['OrderServiceTest.java', '+48'], ['tasks/plan.md', '+1 −1'], ['tasks/todo.md', '+6 −6']] },
+  { h: '127ee4b', s: 'T7: 409 ProblemDetail for optimistic-lock conflicts', lane: 'feat',
+    sum: 'When two orders for the same product commit at the same moment, the one that loses the @Version check gets 409 "Stock changed concurrently, please retry" instead of a 500. This completes the plan.',
+    why: '<b>Closes the loop on T1.</b> The version check added in T1 now gives callers a response they can act on: retry the order.',
+    add: [], mod: ['handler'],
+    files: [['web/GlobalExceptionHandler.java', '+6'], ['OrderControllerTest.java', '+18'], ['tasks/plan.md', '+5 −5'], ['tasks/todo.md', '+10 −10']] },
+  { h: '00f5848', s: 'Add integration test for transactional order placement', lane: 'feat',
+    sum: 'The review found a gap: the unit tests mock their collaborators, so removing @Transactional from placeOrder left them all passing even though stock was no longer saved. This @SpringBootTest calls the real HTTP stack and H2 database.',
+    why: '<b>What it proves:</b> a placed order saves the stock decrease, a rejected order changes nothing, POST and GET return the same body, and concurrent orders never oversell.',
+    add: [], mod: [],
+    files: [['OrderPlacementIntegrationTest.java', '+130'], ['tasks/todo.md', '+7']] },
+  { h: '458f975', s: 'Truncate order createdAt to microseconds', lane: 'feat',
+    sum: 'The new integration test caught a bug. POST returned the in-memory timestamp (nanoseconds on Linux) while GET returned what H2 stored (microseconds), so the two bodies differed. OrderService now takes an injected Clock and truncates to microseconds.',
+    why: '<b>Side benefit:</b> the injected Clock bean (defined in OrdersApplication) lets tests fix the time.',
+    add: ['clock'], mod: ['orderService'],
+    files: [['OrdersApplication.java', '+8'], ['order/OrderService.java', '+7 −2'], ['OrderServiceTest.java', '+14 −1'], ['tasks/todo.md', '+1 −1']] },
+  { h: '5dcce71', s: 'Return a 500 ProblemDetail for unexpected exceptions', lane: 'feat',
+    sum: 'Unhandled exceptions used to fall through to Spring Boot’s default error body, which is not RFC 7807. A catch-all handler now logs the exception and returns "Unexpected error" without exposing the exception message.',
+    why: '<b>Every response is now a ProblemDetail.</b> Framework errors (400 type mismatch, 404, 405) keep their own handlers and status codes.',
+    add: [], mod: ['handler'],
+    files: [['web/GlobalExceptionHandler.java', '+6'], ['OrderControllerTest.java', '+24'], ['tasks/todo.md', '+1 −1']] },
+  { h: '730491a', s: 'Record /ship follow-ups in the task list', lane: 'feat',
+    sum: 'No code changes. The pre-merge checks (code review, security audit, test coverage) produced follow-ups that were not blockers. They are recorded in tasks/todo.md so they are not lost.',
+    why: '<b>Good first issues:</b> look at the open items at the bottom of <code>tasks/todo.md</code>.',
+    add: [], mod: [],
+    files: [['tasks/todo.md', '+34']] },
+  { h: 'd80f6b4', s: 'Merge feature/orders: POST and GET /api/orders', lane: 'merge',
+    sum: 'The feature branch merges into main. Orders can be placed and read back, placement is all-or-nothing, stock is protected by optimistic locking, and every error is an RFC 7807 ProblemDetail.',
+    why: '<b>This is the application as it runs today.</b> The commits after this one only add documentation.',
+    add: [], mod: [],
+    files: [['(merge commit: brings T1–T7 and hardening into main)', '']] },
+  { h: '3517dc3', s: 'Add README with diagrams and smoke test script', lane: 'main',
+    sum: 'A README with Mermaid diagrams of the workflow, architecture, git history, and the optimistic-locking race. scripts/smoke-test.sh runs 17 PASS/FAIL checks against a running app, including 20 buyers racing for the last unit.',
+    why: '<b>Run it yourself:</b> start the app, then run <code>scripts/smoke-test.sh</code> to see every endpoint and error code in action.',
+    add: [], mod: [],
+    files: [['README.md', '+411'], ['scripts/smoke-test.sh', '+101'], ['CLAUDE.md', '+1']] },
+  { h: '1a3b773', s: 'Simplify README for beginners; move detailed guide to docs/deep-dive.md', lane: 'main',
+    sum: 'The README is cut down to a beginner-friendly introduction. The detailed walkthrough moves to docs/deep-dive.md.',
+    why: '<b>Where to look:</b> README for orientation, docs/deep-dive.md for the full explanation.',
+    add: [], mod: [],
+    files: [['README.md', '+91 −333'], ['docs/deep-dive.md', '+411']] },
+  { h: '1473d8c', s: 'Link the visual guide from the README', lane: 'main',
+    sum: 'One line in the README links to a visual guide.',
+    why: 'Documentation only.',
+    add: [], mod: [],
+    files: [['README.md', '+1']] },
+  { h: 'feb682b', s: 'Add the visual guide as a PDF and link it from the README', lane: 'main',
+    sum: 'The visual guide was linked as a private page that visitors could not open. It is now committed as docs/visual-guide.pdf, which GitHub shows inline.',
+    why: 'Documentation only. This is the current head of main.',
+    add: [], mod: [],
+    files: [['docs/visual-guide.pdf', 'binary'], ['README.md', '+1 −1']] },
+];
+
+// Architecture nodes. `from` = first commit index where it exists; `sub` = [fromIndex, text] pairs.
+const NODES = {
+  client: { x: 20, y: 190, w: 120, h: 60, t: 'HTTP client', from: 0, sub: [[0, 'curl / browser']] },
+  productController: { x: 200, y: 50, w: 200, h: 60, t: 'ProductController', from: 0, sub: [[0, '/api/products']] },
+  orderController: { x: 200, y: 190, w: 200, h: 60, t: 'OrderController', from: 5, sub: [[5, 'POST /api/orders'], [6, 'POST · GET /api/orders']] },
+  handler: { x: 200, y: 330, w: 200, h: 60, t: 'GlobalExceptionHandler', from: 6, sub: [[6, '404 order'], [7, '+ 400 invalid / duplicate'], [8, '+ 404 product, 409 stock'], [9, '+ 409 concurrent'], [12, '+ 500 catch-all']] },
+  orderService: { x: 460, y: 190, w: 180, h: 60, t: 'OrderService', from: 5, sub: [[5, 'placeOrder() @Transactional'], [6, 'placeOrder() · getOrder()']] },
+  clock: { x: 460, y: 330, w: 180, h: 60, t: 'Clock bean', from: 11, sub: [[11, 'createdAt → micros']] },
+  productRepo: { x: 700, y: 50, w: 190, h: 60, t: 'ProductRepository', from: 0, sub: [[0, 'entity Product'], [3, 'Product @Version']] },
+  orderRepo: { x: 700, y: 260, w: 190, h: 60, t: 'OrderRepository', from: 4, sub: [[4, 'Order → OrderLine']] },
+  h2: { x: 940, y: 110, w: 110, h: 190, t: 'H2 (memory)', from: 0, sub: [[0, 'product'], [3, 'product +version'], [4, 'product, orders, order_line']] },
+};
+const EDGES = [
+  { a: [140, 210], b: [200, 80], from: 0, l: 'GET', lx: 150, ly: 140 },
+  { a: [400, 80], b: [700, 80], from: 0 },
+  { a: [890, 80], b: [940, 150], from: 0 },
+  { a: [140, 220], b: [200, 220], from: 5 },
+  { a: [400, 220], b: [460, 220], from: 5 },
+  { a: [640, 205], b: [700, 100], from: 5, l: 'load + lock', lx: 600, ly: 150 },
+  { a: [640, 235], b: [700, 285], from: 5, l: 'save', lx: 640, ly: 278 },
+  { a: [890, 290], b: [940, 260], from: 4 },
+  { a: [550, 250], b: [550, 330], from: 11, dash: true, l: 'now()', lx: 558, ly: 296 },
+  { a: [300, 250], b: [300, 330], from: 6, dash: true, l: 'exceptions', lx: 308, ly: 296 },
+  { a: [200, 360], b: [80, 250], from: 6, l: 'ProblemDetail', lx: 70, ly: 320, warn: true },
+];
+
+const FLOW = [
+  { from: 5, t: 'Validate the request body (<code>@Valid</code>)' },
+  { from: 7, t: 'Reject a productId that appears on two lines → 400' },
+  { from: 5, t: 'Load every requested product in one query' },
+  { from: 8, t: 'Every product must exist, or → 404' },
+  { from: 8, t: 'Every line must fit in stock, or → 409' },
+  { from: 11, t: 'Stamp <code>createdAt</code> from the Clock, truncated to µs' },
+  { from: 5, t: 'Reduce stock and copy each unit price into an OrderLine' },
+  { from: 5, t: 'Save the order and its lines in one transaction' },
+  { from: 9, t: 'On commit, a stale <code>Product.version</code> → 409, retry' },
+  { from: 5, t: 'Return 201 Created with a Location header' },
+];
+const ERRORS = [
+  { from: 7, c: 400, w: 'Invalid body or malformed JSON', p: 'errors[{field, message}]' },
+  { from: 7, c: 400, w: 'Same productId on two lines', p: 'productId' },
+  { from: 6, c: 404, w: 'GET with an unknown order id', p: 'orderId' },
+  { from: 8, c: 404, w: 'Unknown productId', p: 'productId' },
+  { from: 8, c: 409, w: 'Not enough stock', p: 'productId, requested, available' },
+  { from: 9, c: 409, w: 'Another order changed the stock first', p: '"please retry"' },
+  { from: 12, c: 500, w: 'Anything unexpected (logged)', p: '"Unexpected error"' },
+];
+const ENDPOINTS = [
+  { from: 0, t: 'GET /api/products' }, { from: 0, t: 'GET /api/products/{id}' },
+  { from: 5, t: 'POST /api/orders' }, { from: 6, t: 'GET /api/orders/{id}' },
+  { from: 0, t: '/actuator/health' }, { from: 0, t: '/h2-console' },
+];
+const TESTS = [
+  { from: 0, t: 'OrdersApplicationTests' }, { from: 0, t: 'ProductControllerTest' },
+  { from: 3, t: 'ProductTest' }, { from: 3, t: 'ProductOptimisticLockTest' },
+  { from: 4, t: 'OrderRepositoryTest' }, { from: 5, t: 'OrderServiceTest' },
+  { from: 5, t: 'OrderControllerTest' }, { from: 10, t: 'OrderPlacementIntegrationTest' },
+];
+const DOCS = [
+  { from: 0, t: 'CLAUDE.md' }, { from: 0, t: 'TRY-IT.md' }, { from: 1, t: 'SPEC.md' },
+  { from: 2, t: 'tasks/plan.md' }, { from: 2, t: 'tasks/todo.md' }, { from: 15, t: 'README.md' },
+  { from: 15, t: 'scripts/smoke-test.sh' }, { from: 16, t: 'docs/deep-dive.md' }, { from: 18, t: 'docs/visual-guide.pdf' },
+];
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const subAt = (pairs, i) => pairs.filter(([f]) => f <= i).pop()?.[1] ?? '';
+const phaseOf = (i) => PHASES.find((p) => i >= p.range[0] && i <= p.range[1]);
+let cur = C.length - 1;
+
+function renderPhases() {
+  $('phases').innerHTML = PHASES.map((p, k) => {
+    const n = p.range[1] - p.range[0] + 1;
+    return (k ? '<span class="arrow" aria-hidden="true">→</span>' : '') +
+      `<button class="phase" type="button" data-phase="${p.id}"><span class="pn">${String(k + 1).padStart(2, '0')}</span><span class="pt">${p.t}</span><span class="pd">${p.d}</span><span class="pc">${n} commit${n > 1 ? 's' : ''}</span></button>`;
+  }).join('');
+  $('phases').querySelectorAll('.phase').forEach((b) => b.addEventListener('click', () => {
+    select(PHASES.find((p) => p.id === b.dataset.phase).range[0]);
+  }));
+}
+
+function laneSvg(i) {
+  // Two lanes: main at x=14, feature at x=32. Draws the line through this row and the dot.
+  const c = C[i], prev = C[i - 1], next = C[i + 1];
+  const M = 14, F = 32;
+  const main = 'var(--accent)', feat = 'var(--branch)';
+  let s = '';
+  const inFeat = (k) => k >= 2 && k <= 13;
+  // main line runs top to bottom except before the first commit / after the last
+  if (i > 0) s += `<line x1="${M}" y1="0" x2="${M}" y2="50%" stroke="${main}" stroke-width="2"/>`;
+  if (i < C.length - 1) s += `<line x1="${M}" y1="50%" x2="${M}" y2="100%" stroke="${main}" stroke-width="2"/>`;
+  // feature lane
+  if (inFeat(i)) {
+    if (i === 2) s += `<line x1="${M}" y1="0" x2="${F}" y2="50%" stroke="${feat}" stroke-width="2"/>`;
+    else s += `<line x1="${F}" y1="0" x2="${F}" y2="50%" stroke="${feat}" stroke-width="2"/>`;
+    s += `<line x1="${F}" y1="50%" x2="${F}" y2="100%" stroke="${feat}" stroke-width="2"/>`;
+  }
+  if (i === 14) s += `<line x1="${F}" y1="0" x2="${M}" y2="50%" stroke="${feat}" stroke-width="2"/>`;
+  const x = c.lane === 'feat' ? F : M;
+  const col = c.lane === 'feat' ? feat : main;
+  const r = c.lane === 'merge' ? 6 : 4.5;
+  s += `<circle cx="${x}" cy="50%" r="${r}" fill="var(--surface)" stroke="${col}" stroke-width="2.5"/>`;
+  if (c.lane === 'merge') s += `<circle cx="${x}" cy="50%" r="2" fill="${col}"/>`;
+  return `<svg aria-hidden="true">${s}</svg>`;
+}
+
+function renderRail() {
+  $('rail').innerHTML = C.map((c, i) =>
+    `<button class="commit" type="button" data-i="${i}"><span class="lane">${laneSvg(i)}</span><span class="ct"><span class="h">${c.h}</span><br><span class="s">${esc(c.s)}</span></span></button>`
+  ).join('');
+  $('rail').querySelectorAll('.commit').forEach((b) => b.addEventListener('click', () => select(+b.dataset.i)));
+}
+
+function renderDiagram(i) {
+  const c = C[i];
+  const lanes = [['Client', 20], ['Web layer', 200], ['Service', 460], ['Data access', 700], ['Database', 940]];
+  let s = `<svg viewBox="0 0 1060 410" role="img" aria-label="Architecture of orders-service at commit ${c.h}">
+  <defs>
+    <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/></marker>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--change)"/></marker>
+  </defs>`;
+  lanes.forEach(([t, x]) => { s += `<text x="${x}" y="24" font-family="var(--f-mono)" font-size="11" letter-spacing="1" fill="var(--muted)">${t.toUpperCase()}</text>`; });
+  EDGES.forEach((e) => {
+    const on = i >= e.from;
+    const fresh = i === e.from;
+    const stroke = !on ? 'var(--ghost)' : fresh ? 'var(--accent)' : e.warn ? 'var(--change)' : 'var(--muted)';
+    const dash = !on ? '4 4' : e.dash ? '5 4' : 'none';
+    const mk = !on ? '' : e.warn && !fresh ? 'url(#arw)' : 'url(#ar)';
+    s += `<g class="edge" opacity="${on ? 1 : 0.35}"><line x1="${e.a[0]}" y1="${e.a[1]}" x2="${e.b[0]}" y2="${e.b[1]}" stroke="${stroke}" stroke-width="${fresh ? 2.5 : 1.5}" stroke-dasharray="${dash}" ${mk ? `marker-end="${mk}"` : ''}/>`;
+    if (e.l && on) s += `<text x="${e.lx}" y="${e.ly}" font-family="var(--f-mono)" font-size="11" fill="${fresh ? 'var(--accent)' : 'var(--muted)'}">${e.l}</text>`;
+    s += '</g>';
+  });
+  Object.entries(NODES).forEach(([k, n]) => {
+    const on = i >= n.from;
+    const isNew = c.add.includes(k);
+    const isMod = c.mod.includes(k);
+    const fill = !on ? 'none' : isNew ? 'var(--accent-soft)' : isMod ? 'var(--change-soft)' : 'var(--surface)';
+    const stroke = !on ? 'var(--ghost)' : isNew ? 'var(--accent)' : isMod ? 'var(--change)' : 'var(--line)';
+    const sw = isNew || isMod ? 2 : 1.25;
+    const tcol = on ? 'var(--ink)' : 'var(--ghost)';
+    const sub = on ? subAt(n.sub, i) : 'not built yet';
+    const cx = n.x + 12;
+    s += `<g class="node" opacity="${on ? 1 : 0.7}"><rect x="${n.x}" y="${n.y}" width="${n.w}" height="${n.h}" rx="6" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" ${on ? '' : 'stroke-dasharray="4 4"'}/>`;
+    if (k === 'h2') {
+      s += `<text x="${cx}" y="${n.y + 24}" font-family="var(--f-display)" font-weight="700" font-size="14" fill="${tcol}">${n.t}</text>`;
+      sub.split(', ').forEach((line, j) => {
+        s += `<text x="${cx}" y="${n.y + 50 + j * 20}" font-family="var(--f-mono)" font-size="11" fill="var(--muted)">▪ ${line}</text>`;
+      });
+    } else {
+      s += `<text x="${cx}" y="${n.y + 25}" font-family="var(--f-display)" font-weight="700" font-size="14" fill="${tcol}">${n.t}</text>`;
+      s += `<text x="${cx}" y="${n.y + 44}" font-family="var(--f-mono)" font-size="11" fill="${on ? 'var(--muted)' : 'var(--ghost)'}">${esc(sub)}</text>`;
+    }
+    if (isNew || isMod) {
+      const label = isNew ? 'NEW' : 'CHANGED';
+      const w = isNew ? 34 : 60;
+      s += `<rect x="${n.x + n.w - w - 6}" y="${n.y - 9}" width="${w}" height="18" rx="9" fill="${isNew ? 'var(--accent)' : 'var(--change)'}"/>`;
+      s += `<text x="${n.x + n.w - w / 2 - 6}" y="${n.y + 4}" text-anchor="middle" font-family="var(--f-mono)" font-size="10" font-weight="500" fill="var(--surface)">${label}</text>`;
+    }
+    s += '</g>';
+  });
+  s += '</svg>';
+  $('diagram').innerHTML = s;
+}
+
+function chips(list, i) {
+  return list.filter((x) => x.from <= i).map((x) => `<span class="chip${x.from === i ? ' new' : ''}">${esc(x.t)}</span>`).join('') || '<span class="empty">None yet</span>';
+}
+
+function select(i) {
+  cur = Math.max(0, Math.min(C.length - 1, i));
+  const c = C[cur], ph = phaseOf(cur);
+  const laneTag = c.lane === 'feat' ? '<span class="tag feat">feature/orders</span>' : c.lane === 'merge' ? '<span class="tag main">merge → main</span>' : '<span class="tag main">main</span>';
+  $('d-tags').innerHTML = `<span class="tag">${c.h}</span>${laneTag}<span class="tag">${ph.t}</span>`;
+  $('d-title').textContent = c.s;
+  $('d-summary').textContent = c.sum;
+  $('d-why').innerHTML = c.why;
+  $('pos').textContent = `${cur + 1} / ${C.length}`;
+  $('prev').disabled = cur === 0;
+  $('next').disabled = cur === C.length - 1;
+
+  renderDiagram(cur);
+
+  const flow = FLOW.filter((f) => f.from <= cur);
+  $('flow').innerHTML = flow.length
+    ? `<ol class="flow">${flow.map((f) => `<li class="${f.from === cur ? 'new' : ''}"><span>${f.t}${f.from === cur ? '<span class="newmark">new</span>' : ''}</span></li>`).join('')}</ol>`
+    : '<p class="empty">This endpoint does not exist yet. It arrives in T3 (dafc960).</p>';
+
+  const errs = ERRORS.filter((e) => e.from <= cur);
+  $('errors').innerHTML = errs.length
+    ? `<div class="tablewrap"><table><thead><tr><th>Status</th><th>When</th><th>Extra fields</th></tr></thead><tbody>${errs.map((e) => `<tr class="${e.from === cur ? 'new' : ''}"><td class="code">${e.c}</td><td>${e.w}</td><td class="mono">${esc(e.p)}</td></tr>`).join('')}</tbody></table></div>`
+    : '<p class="empty">No custom error handling yet. Failures use Spring Boot’s default error body. ProblemDetail responses start in T4 (40bee57).</p>';
+
+  $('files').innerHTML = c.files.map(([f, n]) => `<li><span>${esc(f)}</span><span class="n">${n}</span></li>`).join('');
+  $('endpoints').innerHTML = chips(ENDPOINTS, cur);
+  $('tests').innerHTML = chips(TESTS, cur);
+  $('docs').innerHTML = chips(DOCS, cur);
+
+  document.querySelectorAll('.commit').forEach((b) => b.setAttribute('aria-current', +b.dataset.i === cur ? 'true' : 'false'));
+  document.querySelectorAll('.phase').forEach((b) => b.setAttribute('aria-current', b.dataset.phase === ph.id ? 'true' : 'false'));
+  const active = document.querySelector(`.commit[data-i="${cur}"]`);
+  const rail = document.querySelector('.rail');
+  if (active && rail) {
+    const top = active.offsetTop - rail.clientHeight / 2 + active.clientHeight / 2;
+    rail.scrollTo({ top: Math.max(0, top) });
+  }
+  try { history.replaceState(null, '', '#' + c.h); } catch (e) {}
+}
+
+renderPhases();
+renderRail();
+$('prev').addEventListener('click', () => select(cur - 1));
+$('next').addEventListener('click', () => select(cur + 1));
+document.addEventListener('keydown', (e) => {
+  if (e.target.closest && e.target.closest('input, textarea')) return;
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); select(cur + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); select(cur - 1); }
+});
+const fromHash = C.findIndex((c) => c.h === location.hash.slice(1));
+select(fromHash >= 0 ? fromHash : 0);
+</script>
+
+</body></html>
