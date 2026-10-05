@@ -125,7 +125,7 @@ footer { color: var(--muted); font-size: 12.5px; max-width: 80ch; }
   <header>
     <h1>Orders Service Evolution</h1>
     <p class="lede">How <code>orders-service</code> grew from a read-only product catalogue into an order API with all-or-nothing stock updates, one commit at a time. Pick a phase or a commit, or use the ← → keys. The diagram shows what existed at that commit, what was added, and what changed.</p>
-    <div class="meta"><span>21 commits on main, up to 61b1754</span><span>branch feature/orders, merged at d80f6b4</span><span>Spring Boot · Java 21 · H2</span><span>4 Oct 2026</span></div>
+    <div class="meta"><span id="meta-count"></span><span>branch feature/orders, merged at d80f6b4</span><span>Spring Boot · Java 21 · H2</span><span>4 Oct 2026</span></div>
   </header>
 
   <section style="display:grid;gap:10px">
@@ -190,7 +190,7 @@ footer { color: var(--muted); font-size: 12.5px; max-width: 80ch; }
     </main>
   </div>
 
-  <footer>Built from <code>git log</code> of <code>orders-service</code> (main, 21 commits up to 61b1754). Line counts are insertions/deletions per file. The SPEC → plan → task-by-task flow follows the agent-skills workflow (<code>/spec</code>, <code>/plan</code>, <code>/build</code>, <code>/ship</code>).</footer>
+  <footer>Built from <code>git log</code> of <code>orders-service</code> (main, <span id="foot-count"></span>). Line counts are insertions/deletions per file. The SPEC → plan → task-by-task flow follows the agent-skills workflow (<code>/spec</code>, <code>/plan</code>, <code>/build</code>, <code>/ship</code>).</footer>
 </div>
 
 <script>
@@ -311,6 +311,14 @@ const C = [
     add: [], mod: [],
     files: [['README.md', '+1 −1']] },
 ];
+
+// Commits newer than the hand-written list above. scripts/update-evolution-guide.py fills this
+// block on every push to main. To give a commit a full write-up, move it into C and set add/mod.
+// AUTO-COMMITS:START
+const AUTO = [];
+// AUTO-COMMITS:END
+C.push(...AUTO);
+PHASES[PHASES.length - 1].range[1] = C.length - 1;
 
 // Architecture nodes. `from` = first commit index where it exists; `sub` = [fromIndex, text] pairs.
 const NODES = {
@@ -522,6 +530,8 @@ function select(i) {
 
 renderPhases();
 renderRail();
+$('meta-count').textContent = `${C.length} commits on main, up to ${C[C.length - 1].h}`;
+$('foot-count').textContent = `${C.length} commits up to ${C[C.length - 1].h}`;
 $('prev').addEventListener('click', () => select(cur - 1));
 $('next').addEventListener('click', () => select(cur + 1));
 document.addEventListener('keydown', (e) => {

@@ -7,7 +7,7 @@ This project shows how [Addy Osmani's agent-skills](https://github.com/addyosman
 📖 **Prefer pictures?** Read the [visual guide (PDF)](docs/visual-guide.pdf), an 8-page illustrated walkthrough you can view, download or print.
 Want every detail? See the [deep dive](docs/deep-dive.md).
 
-🧭 **New to the codebase?** [Orders Service Evolution](https://tpillai.github.io/addysomani-agent-skill-demo/Orders%20Service%20Evolution.html) walks through the history commit by commit. For each commit it shows an architecture diagram that marks what was added and what changed, plus how `POST /api/orders` and the error responses grew along the way. The source is [Orders Service Evolution.html](Orders%20Service%20Evolution.html) in this repo.
+🧭 **New to the codebase?** [Orders Service Evolution](https://tpillai.github.io/addysomani-agent-skill-demo/Orders%20Service%20Evolution.html) walks through the history commit by commit. For each commit it shows an architecture diagram that marks what was added and what changed, plus how `POST /api/orders` and the error responses grew along the way. The source is [Orders Service Evolution.html](Orders%20Service%20Evolution.html) in this repo. A GitHub Action adds new commits to it on every push to `main`.
 
 ---
 
