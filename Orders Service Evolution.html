@@ -315,7 +315,10 @@ const C = [
 // Commits newer than the hand-written list above. scripts/update-evolution-guide.py fills this
 // block on every push to main. To give a commit a full write-up, move it into C and set add/mod.
 // AUTO-COMMITS:START
-const AUTO = [];
+const AUTO = [
+  {"h": "a478dac", "s": "Add the latest commits to the evolution guide", "lane": "main", "sum": "Covers 5802317 (guide added) and 61b1754 (README links to GitHub Pages), extends the Document phase, and updates the commit counts to 21.", "why": "Added automatically from git history.", "add": [], "mod": [], "files": [["Orders Service Evolution.html", "+15 −5"]]},
+  {"h": "ecfcd90", "s": "Keep the evolution guide up to date with a GitHub Action", "lane": "main", "sum": "On every push to main, scripts/update-evolution-guide.py appends commits the guide does not list yet (subject, message, files changed) to an AUTO-COMMITS block, then the workflow commits the change with [skip ci] and requests a Pages build. The page now computes its commit counts and the last phase's range from the data.", "why": "Added automatically from git history.", "add": [], "mod": [], "files": [[".github/workflows/update-evolution-guide.yml", "+45"], ["Orders Service Evolution.html", "+12 −2"], ["README.md", "+1 −1"], ["scripts/update-evolution-guide.py", "+75"]]}
+];
 // AUTO-COMMITS:END
 C.push(...AUTO);
 PHASES[PHASES.length - 1].range[1] = C.length - 1;
