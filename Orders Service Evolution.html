@@ -125,7 +125,7 @@ footer { color: var(--muted); font-size: 12.5px; max-width: 80ch; }
   <header>
     <h1>Orders Service Evolution</h1>
     <p class="lede">How <code>orders-service</code> grew from a read-only product catalogue into an order API with all-or-nothing stock updates, one commit at a time. Pick a phase or a commit, or use the ← → keys. The diagram shows what existed at that commit, what was added, and what changed.</p>
-    <div class="meta"><span>19 commits on main</span><span>branch feature/orders, merged at d80f6b4</span><span>Spring Boot · Java 21 · H2</span><span>4 Oct 2026</span></div>
+    <div class="meta"><span>21 commits on main, up to 61b1754</span><span>branch feature/orders, merged at d80f6b4</span><span>Spring Boot · Java 21 · H2</span><span>4 Oct 2026</span></div>
   </header>
 
   <section style="display:grid;gap:10px">
@@ -190,7 +190,7 @@ footer { color: var(--muted); font-size: 12.5px; max-width: 80ch; }
     </main>
   </div>
 
-  <footer>Built from <code>git log</code> of <code>orders-service</code> (main, 19 commits). Line counts are insertions/deletions per file. The SPEC → plan → task-by-task flow follows the agent-skills workflow (<code>/spec</code>, <code>/plan</code>, <code>/build</code>, <code>/ship</code>).</footer>
+  <footer>Built from <code>git log</code> of <code>orders-service</code> (main, 21 commits up to 61b1754). Line counts are insertions/deletions per file. The SPEC → plan → task-by-task flow follows the agent-skills workflow (<code>/spec</code>, <code>/plan</code>, <code>/build</code>, <code>/ship</code>).</footer>
 </div>
 
 <script>
@@ -201,7 +201,7 @@ const PHASES = [
   { id: 'build', t: 'Build', d: 'One task per commit', range: [3, 9] },
   { id: 'harden', t: 'Harden', d: 'Fixes from review', range: [10, 13] },
   { id: 'merge', t: 'Merge', d: 'feature → main', range: [14, 14] },
-  { id: 'docs', t: 'Document', d: 'README, guides', range: [15, 18] },
+  { id: 'docs', t: 'Document', d: 'README, guides', range: [15, 20] },
 ];
 
 const C = [
@@ -297,9 +297,19 @@ const C = [
     files: [['README.md', '+1']] },
   { h: 'feb682b', s: 'Add the visual guide as a PDF and link it from the README', lane: 'main',
     sum: 'The visual guide was linked as a private page that visitors could not open. It is now committed as docs/visual-guide.pdf, which GitHub shows inline.',
-    why: 'Documentation only. This is the current head of main.',
+    why: 'Documentation only.',
     add: [], mod: [],
     files: [['docs/visual-guide.pdf', 'binary'], ['README.md', '+1 −1']] },
+  { h: '5802317', s: 'Add Orders Service Evolution guide and link it from the README', lane: 'main',
+    sum: 'Adds this page. It walks through every commit with an architecture diagram, the POST /api/orders flow, the error responses, and the files, tests and docs present at that point.',
+    why: '<b>For new developers:</b> start here, then read SPEC.md and tasks/plan.md for the reasoning behind each step.',
+    add: [], mod: [],
+    files: [['Orders Service Evolution.html', '+526'], ['README.md', '+2']] },
+  { h: '61b1754', s: 'Link the evolution guide to its GitHub Pages URL', lane: 'main',
+    sum: 'The README now links to the guide on GitHub Pages, so it opens as a page in the browser instead of showing HTML source.',
+    why: 'Documentation only. The app is unchanged since the merge at d80f6b4.',
+    add: [], mod: [],
+    files: [['README.md', '+1 −1']] },
 ];
 
 // Architecture nodes. `from` = first commit index where it exists; `sub` = [fromIndex, text] pairs.
@@ -363,7 +373,7 @@ const TESTS = [
 const DOCS = [
   { from: 0, t: 'CLAUDE.md' }, { from: 0, t: 'TRY-IT.md' }, { from: 1, t: 'SPEC.md' },
   { from: 2, t: 'tasks/plan.md' }, { from: 2, t: 'tasks/todo.md' }, { from: 15, t: 'README.md' },
-  { from: 15, t: 'scripts/smoke-test.sh' }, { from: 16, t: 'docs/deep-dive.md' }, { from: 18, t: 'docs/visual-guide.pdf' },
+  { from: 15, t: 'scripts/smoke-test.sh' }, { from: 16, t: 'docs/deep-dive.md' }, { from: 18, t: 'docs/visual-guide.pdf' }, { from: 19, t: 'Orders Service Evolution.html' },
 ];
 
 const $ = (id) => document.getElementById(id);
