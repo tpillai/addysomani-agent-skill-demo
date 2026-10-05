@@ -4,6 +4,8 @@
 
 This project shows how [Addy Osmani's agent-skills](https://github.com/addyosmani/agent-skills) make an AI coding assistant (Claude Code) build a Spring Boot feature **properly**: plan first, small steps, tests every time.
 
+🧠 **What are agent skills?** [Agent Skills Explained](https://tpillai.github.io/addysomani-agent-skill-demo/agent-skills.html) covers the lifecycle, what a skill file looks like, the 9 commands and 25 skills, and where each step shows up in this repo.
+
 📖 **Prefer pictures?** Read the [visual guide (PDF)](docs/visual-guide.pdf), an 8-page illustrated walkthrough you can view, download or print.
 Want every detail? See the [deep dive](docs/deep-dive.md).
 

@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agent Skills Explained</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Public+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one reading column of numbered sections that follow the deck's order; wide tables and grids break out to the full container. Same tokens as the evolution guide. */
+:root {
+  --bg: #eef1f0; --surface: #ffffff; --ink: #17201f; --muted: #5b6966; --line: #c9d2cf;
+  --accent: #0f6b5c; --accent-soft: #d5ebe5; --warm: #a65c06; --warm-soft: #f7e7d0;
+  --cmd: #3d5fa8;
+  --f-display: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #111716; --surface: #18201f; --ink: #e3ebe8; --muted: #93a39f; --line: #2d3836;
+  --accent: #4fc2a8; --accent-soft: #163a33; --warm: #e6a24a; --warm-soft: #3a2b16;
+  --cmd: #8ea6e6; color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --bg: #111716; --surface: #18201f; --ink: #e3ebe8; --muted: #93a39f; --line: #2d3836;
+  --accent: #4fc2a8; --accent-soft: #163a33; --warm: #e6a24a; --warm-soft: #3a2b16;
+  --cmd: #8ea6e6; color-scheme: dark; }
+
+* { box-sizing: border-box; }
+html { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.6 var(--f-body); }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 28px 20px 72px; display: grid; gap: 64px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(44px, 8vw, 84px); font-weight: 800; letter-spacing: -0.035em; line-height: 0.95; }
+h2 { font-size: clamp(24px, 3.2vw, 34px); font-weight: 700; letter-spacing: -0.02em; line-height: 1.15; max-width: 26ch; }
+h3 { font-size: 17px; font-weight: 700; }
+p { margin: 0; }
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 3px; }
+code, .mono { font-family: var(--f-mono); font-size: 0.88em; }
+.cmd { color: var(--cmd); font-family: var(--f-mono); }
+
+.topnav { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 13px; color: var(--muted); }
+.topnav a { color: var(--muted); }
+.topnav a:hover { color: var(--accent); }
+
+section { display: grid; gap: 22px; }
+.eyebrow { font-family: var(--f-mono); font-size: 12.5px; color: var(--warm); letter-spacing: 0.02em; }
+.label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.lede { font-size: 18px; color: var(--muted); max-width: 60ch; }
+.prose { max-width: 66ch; display: grid; gap: 12px; }
+.note { font-size: 14.5px; color: var(--muted); max-width: 70ch; }
+
+/* Hero */
+.hero { display: grid; gap: 22px; padding-top: 12px; }
+.install { display: inline-flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-self: start; max-width: 100%;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 8px 8px 8px 14px; }
+.install code { font-size: 14px; overflow-wrap: anywhere; }
+.install code::before { content: "$ "; color: var(--warm); }
+.copy { font: 500 12.5px var(--f-body); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 5px; padding: 5px 10px; cursor: pointer; }
+.copy:hover { border-color: var(--accent); }
+.stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; border-top: 1px solid var(--line); padding-top: 18px; }
+@media (max-width: 600px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.stat b { display: block; font-family: var(--f-display); font-size: 40px; font-weight: 800; color: var(--warm); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.stat span { font-size: 13.5px; color: var(--muted); }
+
+.two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+@media (max-width: 700px) { .two { grid-template-columns: minmax(0, 1fr); } }
+.two > div { display: grid; gap: 10px; align-content: start; min-width: 0; }
+ul.plain { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 18px; }
+ul.plain li::before { content: "✕"; color: var(--warm); font-size: 13px; margin-right: 10px; }
+.big { font-size: 19px; line-height: 1.5; }
+
+/* Lifecycle */
+.life { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 900px) { .life { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .life { grid-template-columns: minmax(0, 1fr); } }
+.step { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.step .ph { font-family: var(--f-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--warm); }
+.step h3 { font-size: 20px; }
+.step p { font-size: 14px; color: var(--muted); }
+.step .cmd { font-size: 14px; margin-top: 4px; }
+.step .here { border-top: 1px dashed var(--line); padding-top: 8px; margin-top: 4px; font-size: 13px; }
+.step .here span { display: block; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--accent); font-weight: 600; margin-bottom: 2px; }
+
+/* Tables */
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 15px; }
+th { text-align: left; font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); padding: 6px 10px 8px 0; border-bottom: 1px solid var(--line); }
+td { padding: 10px 10px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+td:first-child { white-space: nowrap; }
+
+/* Anatomy */
+.anatomy { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 32px; align-items: center; }
+@media (max-width: 760px) { .anatomy { grid-template-columns: minmax(0, 1fr); } }
+.file { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; min-width: 0; }
+.file .path { font-family: var(--f-mono); font-size: 12.5px; color: var(--muted); padding-bottom: 8px; }
+.file dl { margin: 0; display: grid; grid-template-columns: auto minmax(0, 1fr); }
+.file dt, .file dd { margin: 0; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.file dt { font-family: var(--f-mono); color: var(--cmd); padding-right: 16px; }
+.file dd { color: var(--ink); }
+
+/* Catalogue */
+.cat { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 820px) { .cat { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .cat { grid-template-columns: minmax(0, 1fr); } }
+.group { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.group .ph { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.08em; color: var(--warm); }
+.group ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 3px; font-family: var(--f-mono); font-size: 13px; overflow-wrap: anywhere; }
+
+/* Excuses */
+.excuse td:first-child { white-space: normal; font-style: italic; color: var(--warm); font-size: 17px; width: 46%; }
+.excuse td:last-child { font-size: 16px; }
+
+/* Ideas */
+.ideas { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 820px) { .ideas { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 520px) { .ideas { grid-template-columns: minmax(0, 1fr); } }
+.idea { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; align-content: start; }
+.idea p { font-size: 14.5px; color: var(--muted); }
+.idea .to { font-family: var(--f-mono); font-size: 12px; color: var(--cmd); }
+
+ul.rows { margin: 0; padding: 0; list-style: none; }
+ul.rows li { padding: 10px 0; border-bottom: 1px solid var(--line); display: grid; gap: 2px; }
+ul.rows li:first-child { border-top: 1px solid var(--line); }
+ul.rows .mono { color: var(--cmd); font-size: 14px; }
+ul.rows small { font-size: 14px; color: var(--muted); }
+
+pre { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; overflow-x: auto; font-family: var(--f-mono); font-size: 13.5px; line-height: 1.7; }
+.auto { background: var(--accent-soft); border-radius: 8px; padding: 18px 20px; display: grid; gap: 8px; align-content: start; }
+.auto .cmd { font-size: 20px; }
+.paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (max-width: 600px) { .paths { grid-template-columns: minmax(0, 1fr); } }
+.path { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; display: grid; gap: 4px; }
+.path .ph { font-family: var(--f-mono); font-size: 11.5px; letter-spacing: 0.08em; color: var(--warm); }
+.path p { font-size: 17px; }
+footer { border-top: 1px solid var(--line); padding-top: 18px; display: grid; gap: 6px; font-size: 13.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <nav class="topnav" aria-label="Site">
+    <a href="https://github.com/tpillai/addysomani-agent-skill-demo">Demo repo</a>
+    <a href="Orders%20Service%20Evolution.html">Orders Service Evolution</a>
+    <a href="https://github.com/addyosmani/agent-skills">addyosmani/agent-skills</a>
+  </nav>
+
+  <header class="hero">
+    <h1>Agent Skills</h1>
+    <p class="lede">Teaching AI coding agents to work like a senior engineer. This page explains Addy Osmani's open-source <a href="https://github.com/addyosmani/agent-skills">agent-skills</a> (MIT) and shows where each idea appears in this demo project.</p>
+    <div class="install"><code id="npx">npx skills add addyosmani/agent-skills</code><button class="copy" type="button" data-copy="npx">Copy</button></div>
+    <div class="stats">
+      <div class="stat"><b>25</b><span>skills</span></div>
+      <div class="stat"><b>9</b><span>slash commands</span></div>
+      <div class="stat"><b>4</b><span>reviewer personas</span></div>
+      <div class="stat"><b>7</b><span>reference checklists</span></div>
+    </div>
+  </header>
+
+  <section id="why">
+    <span class="eyebrow">01 · Why</span>
+    <h2>AI agents write code fast. They also skip the boring, important parts.</h2>
+    <div class="two">
+      <div>
+        <span class="label">Skipped by default</span>
+        <ul class="plain"><li>Specs</li><li>Tests</li><li>Security reviews</li><li>Everything else that makes software reliable</li></ul>
+      </div>
+      <div>
+        <span class="label">What a skill adds</span>
+        <p class="big">A step-by-step recipe the agent must follow, with a clear "done" check at the end. Like a Definition of Done, but for your AI.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="lifecycle">
+    <span class="eyebrow">02 · The lifecycle</span>
+    <h2>The same steps you already follow. Now the agent follows them too.</h2>
+    <div class="life">
+      <div class="step"><span class="ph">DEFINE</span><h3>What?</h3><p>Agree on what to build</p><span class="cmd">/spec</span>
+        <div class="here"><span>In this repo</span><a href="https://github.com/tpillai/addysomani-agent-skill-demo/blob/main/SPEC.md">SPEC.md</a>: endpoints, error codes, the locking decision</div></div>
+      <div class="step"><span class="ph">PLAN</span><h3>How?</h3><p>Split into small tasks</p><span class="cmd">/plan</span>
+        <div class="here"><span>In this repo</span><a href="https://github.com/tpillai/addysomani-agent-skill-demo/blob/main/tasks/plan.md">tasks/plan.md</a>: seven tasks, T1–T7</div></div>
+      <div class="step"><span class="ph">BUILD</span><h3>Code</h3><p>One small slice at a time</p><span class="cmd">/build</span>
+        <div class="here"><span>In this repo</span>One commit per task, <a href="Orders%20Service%20Evolution.html#891c7bd">T1</a> to <a href="Orders%20Service%20Evolution.html#127ee4b">T7</a></div></div>
+      <div class="step"><span class="ph">VERIFY</span><h3>Prove</h3><p>Tests show it works</p><span class="cmd">/test</span>
+        <div class="here"><span>In this repo</span>45 tests, including a real-database <a href="Orders%20Service%20Evolution.html#00f5848">integration test</a></div></div>
+      <div class="step"><span class="ph">REVIEW</span><h3>Check</h3><p>Quality gate before merge</p><span class="cmd">/review</span>
+        <div class="here"><span>In this repo</span>Found 3 problems: <a href="Orders%20Service%20Evolution.html#00f5848">a test gap</a>, <a href="Orders%20Service%20Evolution.html#458f975">a timestamp bug</a>, <a href="Orders%20Service%20Evolution.html#5dcce71">a missing 500</a></div></div>
+      <div class="step"><span class="ph">SHIP</span><h3>Release</h3><p>Roll out safely</p><span class="cmd">/ship</span>
+        <div class="here"><span>In this repo</span>Follow-ups recorded in <a href="https://github.com/tpillai/addysomani-agent-skill-demo/blob/main/tasks/todo.md">tasks/todo.md</a></div></div>
+    </div>
+    <p class="note">You don't always type a command. Skills switch on by themselves: designing an API pulls in <code>api-and-interface-design</code>, building UI pulls in <code>frontend-ui-engineering</code>.</p>
+  </section>
+
+  <section id="skill">
+    <span class="eyebrow">03 · What is a skill?</span>
+    <h2>A skill is a recipe file the agent reads and follows</h2>
+    <div class="anatomy">
+      <div class="file">
+        <div class="path">skills/test-driven-development/SKILL.md</div>
+        <dl>
+          <dt>name + description</dt><dd>Tells the agent when to use it</dd>
+          <dt>Overview</dt><dd>What this skill does</dd>
+          <dt>When to Use</dt><dd>The trigger conditions</dd>
+          <dt>Process</dt><dd>The steps, in order</dd>
+          <dt>Rationalizations</dt><dd>Common excuses and why they're wrong</dd>
+          <dt>Red Flags</dt><dd>Signs something is going wrong</dd>
+          <dt>Verification</dt><dd>Proof required before calling it done</dd>
+        </dl>
+      </div>
+      <div class="prose">
+        <p class="big">It's a plain Markdown file. No SDK, no framework.</p>
+        <p>Think of it as a <b>runbook</b> written for the agent instead of for a person.</p>
+        <p>Every skill has the same shape, so the agent always knows where to look.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="commands">
+    <span class="eyebrow">04 · Commands</span>
+    <h2>Nine commands. That's the whole interface.</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>Type this</th><th>When</th><th>The rule behind it</th></tr></thead>
+        <tbody>
+          <tr><td class="cmd">/spec</td><td>Decide what to build</td><td>Spec before code</td></tr>
+          <tr><td class="cmd">/plan</td><td>Plan how to build it</td><td>Small, atomic tasks</td></tr>
+          <tr><td class="cmd">/build</td><td>Build step by step</td><td>One slice at a time</td></tr>
+          <tr><td class="cmd">/test</td><td>Prove it works</td><td>Tests are proof</td></tr>
+          <tr><td class="cmd">/constraints</td><td>Set the quality bar</td><td>Decide once, enforce everywhere</td></tr>
+          <tr><td class="cmd">/review</td><td>Review before merge</td><td>Improve code health</td></tr>
+          <tr><td class="cmd">/webperf</td><td>Audit web performance</td><td>Measure before you optimize</td></tr>
+          <tr><td class="cmd">/code-simplify</td><td>Make code simpler</td><td>Clarity over cleverness</td></tr>
+          <tr><td class="cmd">/ship</td><td>Release to production</td><td>Faster is safer</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">When installed as a Claude Code plugin, type the full name, for example <code>/agent-skills:plan</code>. Claude Code has its own <code>/plan</code> that does something different.</p>
+  </section>
+
+  <section id="catalogue">
+    <span class="eyebrow">05 · The catalogue</span>
+    <h2>25 skills, grouped by when you need them</h2>
+    <div class="cat">
+      <div class="group"><span class="ph">DEFINE · 4</span><ul><li>interview-me</li><li>idea-refine</li><li>spec-driven-development</li><li>constraint-driven-development</li></ul></div>
+      <div class="group"><span class="ph">PLAN · 1</span><ul><li>planning-and-task-breakdown</li></ul></div>
+      <div class="group"><span class="ph">BUILD · 7</span><ul><li>incremental-implementation</li><li>test-driven-development</li><li>context-engineering</li><li>source-driven-development</li><li>doubt-driven-development</li><li>frontend-ui-engineering</li><li>api-and-interface-design</li></ul></div>
+      <div class="group"><span class="ph">VERIFY · 2</span><ul><li>browser-testing-with-devtools</li><li>debugging-and-error-recovery</li></ul></div>
+      <div class="group"><span class="ph">REVIEW · 4</span><ul><li>code-review-and-quality</li><li>code-simplification</li><li>security-and-hardening</li><li>performance-optimization</li></ul></div>
+      <div class="group"><span class="ph">SHIP · 6</span><ul><li>git-workflow-and-versioning</li><li>ci-cd-and-automation</li><li>deprecation-and-migration</li><li>documentation-and-adrs</li><li>observability-and-instrumentation</li><li>shipping-and-launch</li></ul></div>
+    </div>
+    <p class="note">That's 24 skills by phase, plus one meta-skill, <code>using-agent-skills</code>, that picks the right skill for the task.</p>
+  </section>
+
+  <section id="excuses">
+    <span class="eyebrow">06 · The clever part</span>
+    <h2>Agents make excuses. Skills answer them in advance.</h2>
+    <div class="tablewrap">
+      <table class="excuse">
+        <thead><tr><th>The agent thinks</th><th>The skill answers</th></tr></thead>
+        <tbody>
+          <tr><td>"I'll add tests later."</td><td>Tests are the proof. No test, not done.</td></tr>
+          <tr><td>"It seems right."</td><td>Not enough. Show passing tests, build output or runtime data.</td></tr>
+          <tr><td>"It's a small change, skip the spec."</td><td>Spec before code. A short spec is still a spec.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note">Every skill ships a table of these excuses with a counter-argument, and ends with the evidence it needs before it may say "done". In this repo, that evidence rule caught a real bug: removing <code>@Transactional</code> left all 38 unit tests green while stock stopped being saved. The <a href="Orders%20Service%20Evolution.html#00f5848">integration test</a> was added to prove it.</p>
+  </section>
+
+  <section id="ideas">
+    <span class="eyebrow">07 · Where the ideas come from</span>
+    <h2>Battle-tested ideas, in plain words</h2>
+    <div class="ideas">
+      <div class="idea"><h3>Hyrum's Law</h3><p>If users can see a behaviour, someone depends on it.</p><span class="to">→ API design</span></div>
+      <div class="idea"><h3>Beyoncé Rule</h3><p>If it matters, put a test on it.</p><span class="to">→ Testing</span></div>
+      <div class="idea"><h3>Test pyramid 80/15/5</h3><p>Mostly unit tests, some integration, few end-to-end.</p><span class="to">→ Testing</span></div>
+      <div class="idea"><h3>~100-line changes</h3><p>Small changes get real reviews.</p><span class="to">→ Code review</span></div>
+      <div class="idea"><h3>Chesterton's Fence</h3><p>Know why code exists before you delete it.</p><span class="to">→ Simplification</span></div>
+      <div class="idea"><h3>Trunk-based development</h3><p>Short branches, merge often.</p><span class="to">→ Git workflow</span></div>
+      <div class="idea"><h3>Shift Left</h3><p>Catch problems as early as possible.</p><span class="to">→ CI/CD</span></div>
+      <div class="idea"><h3>Feature flags</h3><p>Ship code switched off, turn it on safely.</p><span class="to">→ CI/CD · Launch</span></div>
+      <div class="idea"><h3>Code is a liability</h3><p>Less code to keep alive is better.</p><span class="to">→ Deprecation</span></div>
+    </div>
+    <p class="note">Sources: <i>Software Engineering at Google</i> and Google's engineering practices guide.</p>
+  </section>
+
+  <section id="extras">
+    <span class="eyebrow">08 · Extras</span>
+    <h2>Built-in reviewers and checklists</h2>
+    <div class="two">
+      <div>
+        <span class="label">4 reviewer personas</span>
+        <ul class="rows">
+          <li><span class="mono">code-reviewer</span><small>Senior Staff Engineer: "Would a staff engineer approve this?"</small></li>
+          <li><span class="mono">test-engineer</span><small>QA Specialist: test strategy and coverage</small></li>
+          <li><span class="mono">security-auditor</span><small>Security Engineer: threat modelling, OWASP</small></li>
+          <li><span class="mono">web-performance-auditor</span><small>Web Perf Engineer: Core Web Vitals, via /webperf</small></li>
+        </ul>
+      </div>
+      <div>
+        <span class="label">7 checklists, loaded only when needed</span>
+        <ul class="rows">
+          <li><span class="mono">definition-of-done.md</span></li>
+          <li><span class="mono">testing-patterns.md</span></li>
+          <li><span class="mono">security-checklist.md</span></li>
+          <li><span class="mono">performance-checklist.md</span></li>
+          <li><span class="mono">accessibility-checklist.md</span></li>
+          <li><span class="mono">observability-checklist.md</span></li>
+          <li><span class="mono">orchestration-patterns.md</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="install">
+    <span class="eyebrow">09 · Try it</span>
+    <h2>Install in one command</h2>
+    <div class="two">
+      <div>
+        <span class="label">Any agent (70+ supported)</span>
+        <pre><span style="color:var(--warm)">$</span> npx skills add addyosmani/agent-skills</pre>
+        <span class="label">Claude Code</span>
+        <pre>/plugin marketplace add addyosmani/agent-skills
+/plugin install agent-skills@addy-agent-skills</pre>
+        <p class="note">Also native for Codex, Cursor, Gemini CLI, Copilot, OpenCode and more.</p>
+      </div>
+      <div class="auto">
+        <span class="cmd">/build auto</span>
+        <p class="big">You approve the plan once. The agent then builds every task by itself.</p>
+        <p class="note">Still test-first. Still one commit per task. It stops when something fails or looks risky.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="adopt">
+    <span class="eyebrow">10 · Adopting it</span>
+    <h2>Two ways to start</h2>
+    <div class="paths">
+      <div class="path"><span class="ph">NEW PROJECT</span><p>Use the full lifecycle from day one.</p></div>
+      <div class="path"><span class="ph">EXISTING CODEBASE</span><p>Roll out step by step, verification first.</p></div>
+    </div>
+    <p class="note">Java teams: skills are language-neutral Markdown, but the testing-patterns examples are JavaScript/TypeScript. Expect to adapt those to JUnit. This demo shows what that looks like in a Spring Boot project. Follow <a href="https://github.com/tpillai/addysomani-agent-skill-demo/blob/main/TRY-IT.md">TRY-IT.md</a> to run the workflow yourself.</p>
+  </section>
+
+  <footer>
+    <p>Based on the talk "Agent Skills: Production-Grade Engineering for AI Agents" by Tejas, Senior Java Architect.</p>
+    <p>agent-skills is by Addy Osmani, MIT licensed: <a href="https://github.com/addyosmani/agent-skills">github.com/addyosmani/agent-skills</a> · <a href="https://skills.addy.ie">skills.addy.ie</a></p>
+  </footer>
+</div>
+<script>
+document.querySelectorAll('.copy').forEach((b) => b.addEventListener('click', () => {
+  const text = document.getElementById(b.dataset.copy).textContent;
+  const done = () => { b.textContent = 'Copied'; setTimeout(() => { b.textContent = 'Copy'; }, 1500); };
+  try {
+    navigator.clipboard.writeText(text).then(done, () => selectText(b.dataset.copy));
+  } catch (e) { selectText(b.dataset.copy); }
+}));
+function selectText(id) {
+  const r = document.createRange(); r.selectNodeContents(document.getElementById(id));
+  const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+}
+</script>
+</body>
+</html>
